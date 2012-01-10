@@ -1,0 +1,8 @@
+{% block center %} 
+	{% if token %}     
+        <h2>Flickr sync ok</h2>
+        {{ token }}
+    {% else %}
+    	<h2>whoops, no token?</h2>
+    {% endif %}
+{% endblock %}

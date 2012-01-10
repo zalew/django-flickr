@@ -1,0 +1,20 @@
+syntax: glob
+
+*.elc
+*.pyc
+*.db
+glob:django.wsgi
+
+syntax: regexp
+^__init__\.py$
+^manage\.py$
+^settings\.py$
+^urls\.py$
+^templates$
+^_dev$
+^.settings$
+^.project$
+^.pydevproject$
+^django_flickr\.egg-info$
+^dist$
+^build$

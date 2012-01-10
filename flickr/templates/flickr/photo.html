@@ -1,0 +1,20 @@
+{% if flickr_link %}<a href="{{ photo.url_page }}">{% endif %}
+{% if size == 'ori' %}
+<img src="{{ photo.ori_source }}" width="{{ photo.ori_width }}" height="{{ photo.ori_height }}" alt="{{ photo.title }}" title="{{ photo.title }}" />
+{% endif %}
+{% if size == 'large' %}
+<img src="{{ photo.large_source }}" width="{{ photo.large_width }}" height="{{ photo.large_height }}" alt="{{ photo.title }}" title="{{ photo.title }}" />
+{% endif %}
+{% if size == 'medium' %}
+<img src="{{ photo.medium_source }}" width="{{ photo.medium_width }}" height="{{ photo.medium_height }}" alt="{{ photo.title }}" title="{{ photo.title }}" />
+{% endif %}
+{% if size == 'small' %}
+<img src="{{ photo.small_source }}" width="{{ photo.small_width }}" height="{{ photo.small_height }}" alt="{{ photo.title }}" title="{{ photo.title }}" />
+{% endif %}
+{% if size == 'thumb' %}
+<img src="{{ photo.thumb_source }}" width="{{ photo.thumb_width }}" height="{{ photo.thumb_height }}" alt="{{ photo.title }}" title="{{ photo.title }}" />
+{% endif %}
+{% if size == 'square' %}
+<img src="{{ photo.square_source }}" width="{{ photo.square_width }}" height="{{ photo.square_height }}" alt="{{ photo.title }}" title="{{ photo.title }}" />
+{% endif %}
+{% if flickr_link %}</a>{% endif %}

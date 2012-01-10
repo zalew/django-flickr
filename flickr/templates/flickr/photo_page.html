@@ -1,0 +1,12 @@
+{% load flickr_tags %}
+{% flickr_photo photo "small" 1 %}
+<h3>{{ photo.title }}</h3>
+<p>{{ photo.description }}</p>
+<dl>
+	<dt>taken</dt><dd>{{ photo.date_taken|date:"d.m.Y" }}</dd>
+</dl>
+<ul>
+	{% for tag in photo.tags.all %}
+	<li>{{ tag }}</li>
+	{% endfor %}
+</ul>

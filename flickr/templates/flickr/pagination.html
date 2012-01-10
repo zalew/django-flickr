@@ -1,0 +1,13 @@
+{% load i18n %}
+
+<ul class="paginator">
+{% if has_previous %}
+	<li class="prev"><a href="?page={{ previous }}" title="{% trans "previous" %}">&laquo;</a></li>
+{% endif %}
+{% for i in page_range %}
+	<li><a {% if i == page %}class="current"{% endif %} href="?page={{ i }}">[{{ i }}]</a></li>
+{% endfor %}        
+{% if has_next %}
+	<li class="next"><a href="?page={{ next }}" title="{% trans "next" %}">&raquo;</a></li>
+{% endif %}	
+</ul>
