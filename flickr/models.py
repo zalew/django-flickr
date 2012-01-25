@@ -265,6 +265,33 @@ class Photo(FlickrModel):
     def get_absolute_url(self):
         return reverse('flickr_photo', args=[self.flickr_id,])
     
+    
+    """because 'Model.get_previous_by_FOO(**kwargs) For every DateField and DateTimeField that does not have null=True'""" 
+    def get_next_by_date_posted(self):
+        try:
+            return Photo.objects.filter(date_posted__gt=self.date_posted)[:1].get()
+        except:
+            pass
+        
+    def get_previous_by_date_posted(self):
+        try:
+            return Photo.objects.filter(date_posted__lt=self.date_posted)[:1].get()
+        except:
+            pass
+        
+    
+    def get_next_by_date_taken(self):
+        try:
+            return Photo.objects.filter(date_taken__gt=self.date_taken)[:1].get()
+        except:
+            pass
+        
+    def get_previous_by_date_taken(self):
+        try:
+            return Photo.objects.filter(date_taken__lt=self.date_taken)[:1].get()
+        except:
+            pass
+    
 
 
 
