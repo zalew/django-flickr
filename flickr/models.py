@@ -38,9 +38,9 @@ class FlickrUser(models.Model):
     nsid = models.CharField(max_length=32, null=True, blank=True)
     username = models.CharField(max_length=64, null=True, blank=True)
     realname = models.CharField(max_length=64, null=True, blank=True)
-    photosurl = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)
-    profileurl = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)
-    mobileurl = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)    
+    photosurl = models.URLField(max_length=255, null=True, blank=True)
+    profileurl = models.URLField(max_length=255, null=True, blank=True)
+    mobileurl = models.URLField(max_length=255, null=True, blank=True)    
     iconserver = models.CharField(max_length=4, null=True, blank=True)
     iconfarm = models.PositiveSmallIntegerField(null=True, blank=True)
     path_alias = models.CharField(max_length=32, null=True, blank=True)
@@ -191,7 +191,7 @@ class Photo(FlickrModel):
     date_taken_granularity = models.PositiveSmallIntegerField(null=True, blank=True)
     date_updated = models.DateTimeField(null=True, blank=True)
     
-    url_page = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)
+    url_page = models.URLField(max_length=255, null=True, blank=True)
     tags = TaggableManager(blank=True)
     
     slug = models.SlugField(max_length=255, null=True, blank=True)
@@ -200,33 +200,33 @@ class Photo(FlickrModel):
     
     square_width = models.PositiveIntegerField(null=True, blank=True)
     square_height = models.PositiveIntegerField(null=True, blank=True)
-    square_source = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)
-    square_url = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)    
+    square_source = models.URLField(max_length=255, null=True, blank=True)
+    square_url = models.URLField(max_length=255, null=True, blank=True)    
     
     thumb_width = models.PositiveIntegerField(null=True, blank=True)
     thumb_height = models.PositiveIntegerField(null=True, blank=True)
-    thumb_source = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)
-    thumb_url = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)
+    thumb_source = models.URLField(max_length=255, null=True, blank=True)
+    thumb_url = models.URLField(max_length=255, null=True, blank=True)
     
     small_width = models.PositiveIntegerField(null=True, blank=True)
     small_height = models.PositiveIntegerField(null=True, blank=True)
-    small_source = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)
-    small_url = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)
+    small_source = models.URLField(max_length=255, null=True, blank=True)
+    small_url = models.URLField(max_length=255, null=True, blank=True)
     
     medium_width = models.PositiveIntegerField(null=True, blank=True)
     medium_height = models.PositiveIntegerField(null=True, blank=True)
-    medium_source = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)
-    medium_url = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)
+    medium_source = models.URLField(max_length=255, null=True, blank=True)
+    medium_url = models.URLField(max_length=255, null=True, blank=True)
     
     large_width = models.PositiveIntegerField(null=True, blank=True)
     large_height = models.PositiveIntegerField(null=True, blank=True)
-    large_source = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)
-    large_url = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)
+    large_source = models.URLField(max_length=255, null=True, blank=True)
+    large_url = models.URLField(max_length=255, null=True, blank=True)
     
     ori_width = models.PositiveIntegerField(null=True, blank=True)
     ori_height = models.PositiveIntegerField(null=True, blank=True)
-    ori_source = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)
-    ori_url = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)
+    ori_source = models.URLField(max_length=255, null=True, blank=True)
+    ori_url = models.URLField(max_length=255, null=True, blank=True)
     
     """http://www.flickr.com/services/api/explore/flickr.photos.getExif
     Lots of data varying type and values, let's just put'em (json string in exif) there and we'll think later."""
