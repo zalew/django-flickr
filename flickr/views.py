@@ -6,7 +6,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template.context import RequestContext
 from django.utils import simplejson
 from django.views.generic.list_detail import object_list
-from flickr.api import FlickrApi
+from flickr.api import FlickrApi, OAuthFlickrApi, FlickrUnauthorizedCall
 from flickr.models import FlickrUser, Photo, PhotoSet
 from flickr.shortcuts import get_token_for_user
 
@@ -15,6 +15,41 @@ FLICKR_KEY = getattr(settings, 'FLICKR_KEY', None)
 FLICKR_SECRET = getattr(settings, 'FLICKR_SECRET', None)
 PERMS = getattr(settings, 'FLICKR_PERMS', None)
 
+
+@login_required
+def oauth(request):
+    token = get_token_for_user(request.user)
+    if not token:
+        api = OAuthFlickrApi(FLICKR_KEY, FLICKR_SECRET)
+        url = api.auth_url(request, perms=PERMS, callback= request.build_absolute_uri(reverse('flickr_complete')) )
+        return HttpResponseRedirect(url)
+    else:
+        api = OAuthFlickrApi(FLICKR_KEY, FLICKR_SECRET, token)
+        try:
+            data = api.get('flickr.test.login')
+        except FlickrUnauthorizedCall:
+            fs = FlickrUser.objects.get(user=request.user)
+            fs.token = None
+            fs.save()
+            return HttpResponseRedirect(reverse('flickr_auth'))
+        except:
+            raise
+    return render_to_response("flickr/auth_ok.html", { 'token': token }, context_instance=RequestContext(request))
+
+@login_required
+def oauth_access(request):
+    api = OAuthFlickrApi(FLICKR_KEY, FLICKR_SECRET)
+    data = api.access_token( request )
+    if data:
+        fs, created = FlickrUser.objects.get_or_create(user=request.user)
+        fs.token = data['token']
+        fs.nsid = data['user_nsid'][0]
+        fs.username = data['username'][0]
+        fs.full_name = data.get('fullname', [''])[0]
+        fs.save()
+        return HttpResponseRedirect(reverse('flickr_auth'))
+    raise Exception, 'Ups! No data...'
+    
 
 @login_required
 def auth(request):
@@ -41,6 +76,7 @@ def auth(request):
     else:
         fs = FlickrUser.objects.get(user=request.user)
     return render_to_response("flickr/auth_ok.html", { 'token': fs.token }, context_instance=RequestContext(request))
+
 
 
 def index(request, user_id=1):
