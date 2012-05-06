@@ -8,7 +8,8 @@ from urllib2 import HTTPError
 import urllib2
 
 class FlickrError(Exception): pass
-class FlickrUnauthorizedCall(Exception):pass
+class FlickrUnauthorizedCall(Exception): pass
+class FlickrInvalidTokenAuth(Exception): pass
 
 class BaseFlickrApi(object):
     """One of those APIs that don't do much. Simple Flickr auth and calling methods.
@@ -26,7 +27,14 @@ class BaseFlickrApi(object):
         raise NotImplementedError
     
     def get(self, method, format='json', auth=True, **params):
-        return self._call_method(auth=auth, method=method, format=format, **params)
+        try:
+            return self._call_method(auth=auth, method=method, format=format, **params)
+        except FlickrInvalidTokenAuth, e:
+            # Fall back to old flickr auth.
+            from warnings import warn
+            warn("FlickrAuthApi is deprecated, update to OAuthFlickrApi redirecting your users to '/auth/'")
+            old_api = FlickrAuthApi(self.FLICKR_KEY, self.FLICKR_SECRET, self.token)
+            return old_api.get(method, format, auth, **params)
 
 
 
@@ -38,7 +46,13 @@ class OAuthFlickrApi(BaseFlickrApi):
         return OAuthConsumer(self.FLICKR_KEY, self.FLICKR_SECRET)
 
     def get_token(self):
-        return Token.from_string(self.token)
+        try:
+            return Token.from_string(self.token)
+        except ValueError, e:
+            if self.token:
+                raise FlickrInvalidTokenAuth(e)
+            else:
+                raise FlickrError, 'Error when calling flickr API:  trying to build a token from an empty string'
 
     def get_oauth_request(self, url=None, token=None, **params):
         request = OAuthRequest.from_consumer_and_token(
@@ -61,14 +75,14 @@ class OAuthFlickrApi(BaseFlickrApi):
             params['method'] = 'flickr.%s' % params['method']
 
         try:
-            request = self.get_oauth_request(token = self.get_token(), **params)
+            request = self.get_oauth_request(token = self.get_token() if auth else None, **params)
             data = self.get_response(request)
         except HTTPError, e:
             if e.code == 401:
                 raise FlickrUnauthorizedCall, e
             else:
                 raise
-        except Exception, e:
+        except FlickrError:
             raise FlickrError, 'Error when calling flickr API:  %s' % e
         return json.loads(data)
 
@@ -102,12 +116,14 @@ class OAuthFlickrApi(BaseFlickrApi):
         params = {'oauth_verifier' : request.GET.get('oauth_verifier') }
         request = self.get_oauth_request(url=self.ACCESS_TOKEN_URL, token=token, **params)
         response = self.get_response(request)
-        data = dict(urlparse.parse_qs(response))
-        data['token'] = Token.from_string(response).to_string()
+        self.token = Token.from_string(response).to_string()
+        """ Check token """
+        data = self.get('flickr.auth.oauth.checkToken', auth=False)
+        data['token'] = self.token
         return data
-        
 
-class FlickrApi(BaseFlickrApi):
+
+class FlickrAuthApi(BaseFlickrApi):
     """One of those APIs that don't do much. Simple Flickr auth and calling methods.
     
     Flickr's API docs: http://www.flickr.com/services/api/"""
@@ -116,9 +132,9 @@ class FlickrApi(BaseFlickrApi):
     """Regular API call methods"""
 
     def __init__(self, key, secret, token=None):
-        super(FlickrApi, self).__init__(key, secret, token)
+        super(FlickrAuthApi, self).__init__(key, secret, token)
         from warnings import warn
-        warn("FlickrApi is deprecated, use OAuthFlickrApi instead")
+        warn("FlickrAuthApi is deprecated, use OAuthFlickrApi instead")
     
     def _call_method(self, auth, **params):
         params['api_key'] = self.FLICKR_KEY
@@ -163,12 +179,11 @@ class FlickrApi(BaseFlickrApi):
         url = '%s?api_key=%s&method=%s&api_sig=%s&frob=%s' % (self.ENDPOINT, self.FLICKR_KEY, method, auth_sig, frob)
         data = self._parse_xml(url)
         return data
-    
-    
-    
-    
-    
-   
+
+
+""" OAuth by default """
+FlickrApi = OAuthFlickrApi
+
     
 """
 below is taken from
