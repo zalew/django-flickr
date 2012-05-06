@@ -18,10 +18,11 @@ class BaseFlickrApi(object):
     
     ENDPOINT = 'http://api.flickr.com/services/rest/'
     
-    def __init__(self, key, secret, token=None):
+    def __init__(self, key, secret, token=None, fallback=True):
         self.FLICKR_KEY = key
         self.FLICKR_SECRET = secret
         self.token = token
+        self.fallback = fallback
         
     def _call_method(self, auth, **params):
         raise NotImplementedError
@@ -33,8 +34,11 @@ class BaseFlickrApi(object):
             # Fall back to old flickr auth.
             from warnings import warn
             warn("FlickrAuthApi is deprecated, update to OAuthFlickrApi redirecting your users to '/auth/'")
-            old_api = FlickrAuthApi(self.FLICKR_KEY, self.FLICKR_SECRET, self.token)
-            return old_api.get(method, format, auth, **params)
+            if self.fallback:
+                old_api = FlickrAuthApi(self.FLICKR_KEY, self.FLICKR_SECRET, self.token)
+                return old_api.get(method, format, auth, **params)
+            else:
+                raise FlickrError, 'No fall back to old Flickr Auth allowed.'
 
 
 
@@ -114,11 +118,11 @@ class OAuthFlickrApi(BaseFlickrApi):
             raise FlickrError, 'oauth_token mismatch!'
         """ Access token """
         params = {'oauth_verifier' : request.GET.get('oauth_verifier') }
-        request = self.get_oauth_request(url=self.ACCESS_TOKEN_URL, token=token, **params)
-        response = self.get_response(request)
+        rq = self.get_oauth_request(url=self.ACCESS_TOKEN_URL, token=token, **params)
+        response = self.get_response(rq)
         self.token = Token.from_string(response).to_string()
         """ Check token """
-        data = self.get('flickr.auth.oauth.checkToken', auth=False)
+        data = self.get('flickr.auth.oauth.checkToken')
         data['token'] = self.token
         return data
 

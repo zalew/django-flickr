@@ -25,7 +25,7 @@ def oauth(request):
         url = api.auth_url(request, perms=PERMS, callback= request.build_absolute_uri(reverse('flickr_complete')) )
         return HttpResponseRedirect(url)
     else:
-        api = FlickrApi(FLICKR_KEY, FLICKR_SECRET, token)
+        api = FlickrApi(FLICKR_KEY, FLICKR_SECRET, token, fallback=False)
         try:
             data = api.get('flickr.test.login')
         except:# FlickrUnauthorizedCall:
