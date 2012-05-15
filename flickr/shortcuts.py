@@ -60,4 +60,7 @@ def get_photoset_photos_json(photoset_id, token):
     api = FlickrApi(FLICKR_KEY, FLICKR_SECRET, token)
     return bunchify(api.get(method='flickr.photosets.getPhotos', photoset_id=photoset_id))
     
-
+def get_user_json(nsid, token):
+    api = FlickrApi(FLICKR_KEY, FLICKR_SECRET, token)
+    return bunchify(api.get(method='flickr.people.getInfo', user_id=nsid))
+    

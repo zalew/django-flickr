@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
+from django.utils.timezone import now
 from taggit.managers import TaggableManager
 
 
@@ -27,7 +28,7 @@ class FlickrUserManager(models.Manager):
                      'photosurl': unslash(person.photosurl._content),
                      'profileurl': unslash(person.profileurl._content),
                      'mobileurl': unslash(person.mobileurl._content), 
-                     'last_sync': datetime.now(),                    
+                     'last_sync': now(),                    
                      }
         return self.filter(pk=pk).update(**dict(user_data.items() + kwargs.items()))        
         
