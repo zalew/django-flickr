@@ -42,7 +42,13 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
                
         make_option('--photos', action='store_true', dest='photos', default=False,
             help='Sync photos (only photos, no photosets sync action is run).'),
-               
+
+        make_option('--update_photos', action='store_true', dest='update_photos', default=False,
+            help='Update photos when updating a photoset.'),
+
+        make_option('--update_tags', action='store_true', dest='update_tags', default=False,
+            help='Update tags when updating a photo.'),
+    
         make_option('--test', '-t', action='store_true', dest='test', default=False,
             help='Test/simulate. Don\'t write results to db.'),         
          
@@ -99,6 +105,7 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
                 FlickrUser.objects.update_from_json(pk=flickr_user.pk, info=info)
             else:
                 print '-- got data for user'
+        print 'COMPLETE: user info sync'
     
     def user_photos(self, **options):        
         flickr_user = self.flickr_user
@@ -129,7 +136,7 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
                                 Photo.objects.create_from_json(flickr_user=flickr_user, info=info, sizes=sizes, exif=exif, geo=geo)
                             else:
                                 if options.get('force_update', False):                                
-                                    Photo.objects.update_from_json(flickr_id=photo.id, info=info, sizes=sizes, exif=exif, geo=geo)
+                                    Photo.objects.update_from_json(flickr_id=photo.id, info=info, sizes=sizes, exif=exif, geo=geo, update_tags=options.get('update_tags', False))
                     else:
                         print '-- got data for photo %s' % photo.id
                 except Exception as e:
@@ -170,8 +177,8 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
                         if not PhotoSet.objects.filter(flickr_id=s.id):
                             PhotoSet.objects.create_from_json(flickr_user=flickr_user, info=s, photos=photos)
                         else:
-                            if options.get('force_update', False): 
-                                pass #TODO: implement update_from_json for photosets
+                            if options.get('force_update', False):
+                                PhotoSet.objects.update_from_json(flickr_id=s.id, info=s, photos=photos, update_photos=options.get('update_photos', False))
                 i += 1
                 if i % 10 == 0:
                     print '- %d photosets fetched, %d to go'  % (i, length-i)
