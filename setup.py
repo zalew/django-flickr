@@ -27,7 +27,7 @@ setup(
         'Framework :: Django',
     ],
     install_requires=[
-        'django >= 1.2',
+        'django >= 1.4',
         'bunch >= 1.0',
         'django-taggit >= 0.9',
         'django-taggit-templatetags >= 0.4',

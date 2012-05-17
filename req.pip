@@ -1,0 +1,5 @@
+django>=1.4
+bunch
+django-taggit
+django-taggit-templatetags
+oauth2
