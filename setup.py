@@ -6,7 +6,7 @@ setup(
     name='django-flickr',
     version='.'.join(map(str, VERSION)),
     description='Mirror your Flickr into Django.',
-    long_description=open(os.path.join(os.path.dirname(__file__), 'README')).read(),
+    long_description=open(os.path.join(os.path.dirname(__file__), 'README.rst')).read(),
     keywords='django flickr photo photography photoblog',
     author='Jakub Zalewski',
     author_email='zalew7@gmail.com',
@@ -31,5 +31,6 @@ setup(
         'bunch >= 1.0',
         'django-taggit >= 0.9',
         'django-taggit-templatetags >= 0.4',
+        'oauth2',
     ],    
 )
