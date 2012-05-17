@@ -274,16 +274,37 @@ class Photo(FlickrModel):
     """because 'Model.get_previous_by_FOO(**kwargs) For every DateField and DateTimeField that does not have null=True'""" 
     def get_next_by_date_posted(self):
         try:
-            return Photo.objects.filter(date_posted__gte=self.date_posted, flickr_id__gte=self.flickr_id).exclude(flickr_id=self.flickr_id).order_by('flickr_id')[:1].get()
+            return Photo.objects.filter(date_posted__gte=self.date_posted).exclude(flickr_id=self.flickr_id).order_by('date_posted', 'date_taken')[:1].get()
+        except:
+            pass
+    
+    
+    def get_next_public_by_date_posted(self):
+        try:
+            return Photo.objects.public().filter(date_posted__gte=self.date_posted).exclude(flickr_id=self.flickr_id).order_by('date_posted', 'date_taken')[:1].get()
         except:
             pass
         
+      
     def get_previous_by_date_posted(self):
         try:
-            return Photo.objects.filter(date_posted__lte=self.date_posted, flickr_id__lte=self.flickr_id).exclude(flickr_id=self.flickr_id).order_by('-flickr_id')[:1].get()
+            return Photo.objects.filter(date_posted__lte=self.date_posted).exclude(flickr_id=self.flickr_id).order_by('-date_posted', '-date_taken')[:1].get()
         except:
             pass
-        
+
+    def get_previous_public_by_date_posted(self):
+        try:
+            return Photo.objects.public().filter(date_posted__lte=self.date_posted).exclude(flickr_id=self.flickr_id).order_by('-date_posted', '-date_taken')[:1].get()
+        except:
+            pass      
+    
+    
+    """shortcuts - bringing some sanity"""
+    def get_next(self): return self.get_next_public_by_date_posted()
+    def get_prev(self): return self.get_previous_public_by_date_posted()
+    
+    
+    
     
     def get_next_by_date_taken(self):
         try:
