@@ -408,6 +408,27 @@ class PhotoSet(FlickrModel):
                 pass
     
     
+
+class Collection(FlickrModel):
+    
+    server = models.PositiveSmallIntegerField()
+    secret = models.CharField(max_length=10)    
+    parent = models.ForeignKey('self', null=True)
+    title = models.CharField(max_length=200)
+    description = models.TextField(null=True, blank=True)
+    icon = models.URLField(max_length=255, null=True, blank=True)    
+    sets = models.ManyToManyField(PhotoSet, null=True)    
+    date_created = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ('-date_created',)
+        get_latest_by = 'date_created'
+
+    def __unicode__(self):
+        return u'%s' % self.title
+    
+    
+    
 class JsonCache(models.Model):
     
     flickr_id = models.CharField(max_length=50, null=True, blank=True)
