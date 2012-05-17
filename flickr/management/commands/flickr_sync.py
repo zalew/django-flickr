@@ -94,9 +94,8 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
             """default behavior: sync pics newer than the newest and user info"""
             if options.get('verbosity') > 0:
                 print 'Syncing default'
-            self.user_info(**options)
             self.user_photos(**options)
-            self.flickr_user.save() # bump last_sync
+            self.user_info(**options) # this already bumps last_sync
             
         t2 = time.time()
         print 'Exec time: '+str(round(t2-t1))
