@@ -319,6 +319,29 @@ class Photo(FlickrModel):
             pass
     
 
+    def get_next_in_photoset(self, photoset):
+        if not hasattr(self, '_next_in_ps%s' % photoset.flickr_id):
+            photo = None
+            try:
+                if photoset.photos.filter(flickr_id=self.flickr_id).exists():
+                    photo = photoset.photos.visible().filter(date_posted__gte=self.date_posted).exclude(flickr_id=self.flickr_id).order_by('date_posted', 'date_taken')[:1].get()
+                    print photo
+            except:
+                pass
+            setattr(self, '_next_in_ps%s' % photoset.flickr_id, photo)
+        return getattr(self, '_next_in_ps%s' % photoset.flickr_id)
+
+
+    def get_previous_in_photoset(self, photoset):
+        if not hasattr(self, '_previous_in_ps%s' % photoset.flickr_id):
+            photo = None
+            try:
+                if photoset.photos.filter(flickr_id=self.flickr_id).exists():
+                    photo = photoset.photos.visible().filter(date_posted__lte=self.date_posted).exclude(flickr_id=self.flickr_id).order_by('-date_posted', '-date_taken')[:1].get()
+            except:
+                pass
+            setattr(self, '_previous_in_ps%s' % photoset.flickr_id, photo)
+        return getattr(self, '_previous_in_ps%s' % photoset.flickr_id)
 
 
 class PhotoSetManager(models.Manager):
