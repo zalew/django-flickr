@@ -269,26 +269,26 @@ class Photo(FlickrModel):
     """because 'Model.get_previous_by_FOO(**kwargs) For every DateField and DateTimeField that does not have null=True'""" 
     def get_next_by_date_posted(self):
         try:
-            return Photo.objects.filter(date_posted__gt=self.date_posted)[:1].get()
+            return Photo.objects.filter(date_posted__gte=self.date_posted, flickr_id__gte=self.flickr_id).exclude(flickr_id=self.flickr_id).order_by('flickr_id')[:1].get()
         except:
             pass
         
     def get_previous_by_date_posted(self):
         try:
-            return Photo.objects.filter(date_posted__lt=self.date_posted)[:1].get()
+            return Photo.objects.filter(date_posted__lte=self.date_posted, flickr_id__lte=self.flickr_id).exclude(flickr_id=self.flickr_id).order_by('-flickr_id')[:1].get()
         except:
             pass
         
     
     def get_next_by_date_taken(self):
         try:
-            return Photo.objects.filter(date_taken__gt=self.date_taken)[:1].get()
+            return Photo.objects.filter(date_taken__gte=self.date_taken)[:1].get()
         except:
             pass
         
     def get_previous_by_date_taken(self):
         try:
-            return Photo.objects.filter(date_taken__lt=self.date_taken)[:1].get()
+            return Photo.objects.filter(date_taken__lte=self.date_taken)[:1].get()
         except:
             pass
     
