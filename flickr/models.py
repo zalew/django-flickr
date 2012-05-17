@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
+from django.utils.timezone import now
 from taggit.managers import TaggableManager
 
 
@@ -27,7 +28,7 @@ class FlickrUserManager(models.Manager):
                      'photosurl': unslash(person.photosurl._content),
                      'profileurl': unslash(person.profileurl._content),
                      'mobileurl': unslash(person.mobileurl._content), 
-                     'last_sync': datetime.now(),                    
+                     'last_sync': now(),                    
                      }
         return self.filter(pk=pk).update(**dict(user_data.items() + kwargs.items()))        
         
@@ -108,13 +109,14 @@ class PhotoManager(models.Manager):
         size_json = bunchify(sizes['sizes']['size'])
         photo_data = {
                   'flickr_id': photo.id, 'server': photo.server, 
-                  'secret': photo.secret, 'originalsecret': photo.originalsecret, 'farm': photo.farm,
+                  'secret': photo.secret, 'originalsecret': getattr(photo, 'originalsecret', ''), 'farm': photo.farm,
                   'title': photo.title._content, 'description': photo.description._content, 'date_taken': photo.dates.taken,
                   'date_posted': ts_to_dt(photo.dates.posted), 'date_updated': ts_to_dt(photo.dates.lastupdate),
                   'date_taken_granularity':  photo.dates.takengranularity,
                   'ispublic': photo.visibility.ispublic, 'isfriend': photo.visibility.isfriend, 
                   'isfamily': photo.visibility.isfamily,   
-                  'license': photo.license, 'tags': photo.tags.tag,        
+                  'license': photo.license, 'tags': photo.tags.tag,
+                  'last_sync' : now(),
                   }
         if flickr_user:
             photo_data['user'] = flickr_user
@@ -141,6 +143,8 @@ class PhotoManager(models.Manager):
                     if e.label == 'Flash':        photo_data['exif_flash'] = e.raw._content
             except KeyError:
                 pass
+            except AttributeError: # 'e.clean._content'
+                pass
         if geo:
             pass    
         return photo_data
@@ -166,6 +170,7 @@ class PhotoManager(models.Manager):
         result = self.filter(flickr_id=flickr_id).update(**dict(photo_data.items() + kwargs.items()))
         if result == 1 and update_tags:
             obj = self.get(flickr_id=flickr_id)
+            obj.tags.clear()
             self._add_tags(obj, tags)
         return result
     
@@ -316,13 +321,24 @@ class PhotoSetManager(models.Manager):
                   'secret': photoset.secret, 'farm': photoset.farm, 'primary': photoset.primary,
                   'title': photoset.title._content, 'description': photoset.description._content,
                   'date_posted': ts_to_dt(photoset.date_create), 'date_updated': ts_to_dt(photoset.date_update),
-                  'photos': photos,                          
+                  'photos': photos,
+                  'last_sync' : now(),
                   }
         if flickr_user:
             data['user'] = flickr_user
         return data
     
-    
+    def update_from_json(self, flickr_id, info, photos, update_photos=False, **kwargs):
+        """Update a record with flickr_id"""
+        photoset_data = self._prepare_data(info=info, photos=photos, **kwargs)
+        photos = photoset_data.pop('photos')
+        result = self.filter(flickr_id=flickr_id).update(**dict(photoset_data.items() + kwargs.items()))
+        if result==1 and update_photos:
+            obj = self.get(flickr_id=flickr_id)
+            obj.photos.clear()
+            self._add_photos(obj, photos)
+        return result
+
     def create_from_json(self, flickr_user, info, photos, **kwargs):
         """Create a record for flickr_user"""
         photoset_data = self._prepare_data(flickr_user=flickr_user, info=info, photos=photos, **kwargs)
