@@ -103,7 +103,7 @@ Contributors
 ------------
 
 - Jakub Zalewski http://zalew.net
-
+- Javier García Sogo https://bitbucket.org/jgsogo
 
 
 .. _pypi: http://pypi.python.org/pypi/django-flickr
