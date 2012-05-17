@@ -22,7 +22,7 @@ class Command(BaseCommand):
             help='Initial sync. For improved performance it assumpts db flickr tables are empty and blindly hits create().'),
         
         make_option('--days', '-d', action='store', dest='days', default=None,
-            help='Sync photos from the last n days. Default is 1 day. Useful for cron jobs.'),       
+            help='Sync photos from the last n days. Useful for cron jobs.'),       
                 
         make_option('--user', '-u', action='store', dest='user_id', default=1,
             help='Sync for a particular user. Default is 1 (in most cases it\'s the admin and you\'re using it only for yourself).'),
@@ -80,18 +80,28 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
         except FlickrUser.DoesNotExist:
             raise CommandError, 'Flickr not authenticated for user %s. %s' % (str(user), self.help_text)
         
-        if options.get('photosets'):           
+        if options.get('photosets'):
+            if options.get('verbosity') > 0:
+                print 'Syncing photosets'
             self.user_photosets(**options)
             self.flickr_user.save() # bump last_sync
         elif options.get('photos'):
+            if options.get('verbosity') > 0:
+                print 'Syncing photos'
             self.user_photos(**options)
             self.flickr_user.save() # bump last_sync
         else:
+            """default behavior: sync pics newer than the newest and user info"""
+            if options.get('verbosity') > 0:
+                print 'Syncing default'
             self.user_info(**options)
-        
+            self.user_photos(**options)
+            self.flickr_user.save() # bump last_sync
+            
         t2 = time.time()
         print 'Exec time: '+str(round(t2-t1))
         return 'Sync end'
+    
     
     def user_info(self, **options):
         flickr_user = self.flickr_user
@@ -107,6 +117,7 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
                 print '-- got data for user'
         print 'COMPLETE: user info sync'
     
+    
     def user_photos(self, **options):        
         flickr_user = self.flickr_user
         print 'BEGIN: user photos sync'
@@ -117,6 +128,13 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
         if options.get('days'):
             days = int(options.get('days'))
             min_upload_date = (datetime.date.today() - datetime.timedelta(days)).isoformat()
+        else:
+            try:
+                if options.get('verbosity') > 1:
+                    print 'fetching since last sync'
+                min_upload_date = flickr_user.last_sync
+            except:
+                pass
         photos = get_all_photos(nsid=flickr_user.nsid, token=flickr_user.token, 
                         page=page, per_page=per_page, min_upload_date=min_upload_date)
         length = len(photos)
@@ -126,20 +144,32 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
             i = 0
             for photo in photos:
                 try:
+                    if options.get('verbosity') > 1:
+                        print 'fetching info for photo #%s "%s"' % (photo.id, photo.title)
                     info, sizes, exif, geo = get_photo_details_jsons(photo_id=photo.id, token=flickr_user.token)
                     if not options.get('test', False):
                         if options.get('initial', False):
                             #blindly create for initial sync (assumpts table is empty)
+                            if options.get('verbosity') > 1:
+                                print 'inserting photo #%s "%s"' % (photo.id, photo.title)
                             Photo.objects.create_from_json(flickr_user=flickr_user, info=info, sizes=sizes, exif=exif, geo=geo)
                         else:                            
                             if not Photo.objects.filter(flickr_id=photo.id):
+                                if options.get('verbosity') > 1:
+                                    print 'inserting photo #%s "%s"' % (photo.id, photo.title)
                                 Photo.objects.create_from_json(flickr_user=flickr_user, info=info, sizes=sizes, exif=exif, geo=geo)
                             else:
-                                if options.get('force_update', False):                                
+                                if options.get('verbosity') > 1:
+                                    print 'record found for photo #%s "%s"' % (photo.id, photo.title)
+                                if options.get('force_update', False): 
+                                    if options.get('verbosity') > 1:
+                                        print 'updating photo #%s "%s"' % (photo.id, photo.title)                            
                                     Photo.objects.update_from_json(flickr_id=photo.id, info=info, sizes=sizes, exif=exif, geo=geo, update_tags=options.get('update_tags', False))
                     else:
-                        print '-- got data for photo %s' % photo.id
+                        print '-- got data for photo #%s "%s"' % (photo.id, photo.title)
                 except Exception as e:
+                    if options.get('verbosity') > 1:
+                        print 'ERR failing silently exception "%s"' % (e)
                     # in case sth got wrong with a data set, let's log all the data to db and not break the ongoing process
                     try:                
                         JsonCache.objects.create(flickr_id=photo.id, info=info, sizes=sizes, exif=exif, geo=geo, exception=e)
