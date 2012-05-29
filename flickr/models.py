@@ -115,10 +115,10 @@ class PhotoManager(models.Manager):
 
     def _prepare_data(self, info, sizes, flickr_user=None, exif=None, geo=None):
         photo = bunchify(info['photo'])
-        size_json = bunchify(sizes['sizes']['size'])
         photo_data = {
                   'flickr_id': photo.id, 'server': photo.server,
                   'secret': photo.secret, 'originalsecret': getattr(photo, 'originalsecret', ''), 'farm': photo.farm,
+                  'originalformat' : photo.originalformat,
                   'title': photo.title._content, 'description': photo.description._content, 'date_taken': photo.dates.taken,
                   'date_posted': ts_to_dt(photo.dates.posted), 'date_updated': ts_to_dt(photo.dates.lastupdate),
                   'date_taken_granularity':  photo.dates.takengranularity,
@@ -129,14 +129,16 @@ class PhotoManager(models.Manager):
                   }
         if flickr_user:
             photo_data['user'] = flickr_user
-        size_label_conv = {'Square': 'square', 'Thumbnail': 'thumb', 'Small': 'small', 'Medium 640': 'medium', 'Large': 'large', 'Original': 'ori',}
-        for size in size_json:
-            if size.label in size_label_conv.keys():
-                label = size_label_conv[size.label]
-                photo_data = dict(photo_data.items() + {
-                                label+'_width': size.width, label+'_height': size.height,
-                                label+'_source': size.source, label+'_url': unslash(size.url),
-                                }.items())
+        if sizes:
+            size_label_conv = {'Square': 'square', 'Thumbnail': 'thumb', 'Small': 'small', 'Medium 640': 'medium', 'Large': 'large', 'Original': 'ori',}
+            size_json = bunchify(sizes['sizes']['size'])
+            for size in size_json:
+                if size.label in size_label_conv.keys():
+                    label = size_label_conv[size.label]
+                    photo_data = dict(photo_data.items() + {
+                                    label+'_width': size.width, label+'_height': size.height,
+                                    label+'_source': size.source, label+'_url': unslash(size.url),
+                                    }.items())
         for url in photo.urls.url:
             if url.type == 'photopage':
                 photo_data['url_page'] = unslash(url._content)
@@ -195,7 +197,8 @@ class Photo(FlickrModel):
     server = models.PositiveSmallIntegerField()
     farm = models.PositiveSmallIntegerField()
     secret = models.CharField(max_length=10)
-    originalsecret = models.CharField(max_length=10)
+    originalsecret = models.CharField(max_length=10, null=True, blank=True)
+    originalformat = models.CharField(max_length=4, null=True, blank=True)
 
     title = models.CharField(max_length=255, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
