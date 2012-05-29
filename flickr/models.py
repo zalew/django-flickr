@@ -11,6 +11,8 @@ from django.utils.timezone import now
 from taggit.managers import TaggableManager
 
 
+URL_BASE = getattr(settings, 'FLICKR_URL_BASE', 'http://flickr.com/')
+
 def ts_to_dt(timestamp):
     return datetime.fromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
 
@@ -57,6 +59,13 @@ class FlickrUser(models.Model):
         
     def __unicode__(self):
         return u"%s" % self.username
+    
+    @property
+    def flickr_page_url(self):
+        if self.username:
+            return '%sphotos/%s/' % (URL_BASE, self.username)
+        return '%sphotos/%s/' % (URL_BASE, self.nsid)
+        
     
 
 class FlickrModel(models.Model):
@@ -269,7 +278,10 @@ class Photo(FlickrModel):
 
     def get_absolute_url(self):
         return reverse('flickr_photo', args=[self.flickr_id,])
-    
+        
+    @property
+    def flickr_page_url(self):
+        return '%s%s/' % (self.user.flickr_page_url, self.flickr_id)
     
     """because 'Model.get_previous_by_FOO(**kwargs) For every DateField and DateTimeField that does not have null=True'""" 
     def get_next_by_date_posted(self):
@@ -421,6 +433,10 @@ class PhotoSet(FlickrModel):
     def get_absolute_url(self):
         return reverse('flickr_photoset', args=[self.flickr_id,])
     
+    @property
+    def flickr_page_url(self):
+        return '%ssets/%s/' % (self.user.flickr_page_url, self.flickr_id)
+    
     def cover(self):
         try:
             return Photo.objects.get(flickr_id=self.primary)
@@ -520,6 +536,9 @@ class Collection(FlickrModel):
     def __unicode__(self):
         return u'%s' % self.title
     
+    @property
+    def flickr_page_url(self):
+        return '%scollections/%s/' % (self.user.flickr_page_url, (self.flickr_id.split('-')[-1]))
     
     
 class JsonCache(models.Model):
