@@ -1,5 +1,5 @@
 from django.contrib import admin
-from flickr.models import Photo, FlickrUser, PhotoSet, Collection
+from flickr.models import Photo, FlickrUser, PhotoSet, Collection, PhotoDownload
 
 
 
@@ -43,3 +43,14 @@ class FlickrUserAdmin(admin.ModelAdmin):
     list_display = ('user', 'username', 'nsid')
     
 admin.site.register(FlickrUser, FlickrUserAdmin)
+
+
+class DownloadAdmin(admin.ModelAdmin):
+    date_hierarchy = 'date_downloaded'
+    list_display = ('photo',  'date_downloaded', 'ori')
+    list_display_links = ('photo', 'date_downloaded')
+    list_filter = ('date_downloaded',)
+    #prepopulated_fields = {'slug': ('title',)}
+    search_fields = ['photo__title', 'photo__flickr_id']
+
+admin.site.register(PhotoDownload, DownloadAdmin)
