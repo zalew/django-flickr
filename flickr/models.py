@@ -409,16 +409,66 @@ class PhotoSet(FlickrModel):
     
     
 
+class CollectionManager(models.Manager):
+    
+    def _add_sets(self, obj, sets):
+        """add sets that are present in our database"""
+        flickr_sets = PhotoSet.objects.filter(flickr_id__in=[s.id for s in sets])
+        obj.sets.add(*[s.id for s in flickr_sets])           
+                        
+    def _prepare_data(self, info, parent=None, flickr_user=None):
+        col = bunchify(info)
+        data = {'flickr_id': col.id, 
+                'title': col.title, 'description': col.description,                   
+                'parent': parent, 'last_sync' : now(),
+                }        
+        if flickr_user:
+            data['user'] = flickr_user
+        if 'date_create' in col.keys():
+            data['date_created'] = ts_to_dt(col.date_create)
+        if 'set' in col.keys():
+            data['sets'] = col.set
+        if 'collection' in col.keys():
+            data['collections'] = col.collection
+        return data
+        
+    def create_obj(self, info, parent=None, flickr_user=None, **kwargs):
+        data = self._prepare_data(info, parent, flickr_user)
+        sets_data = cols_data = None
+        if 'sets' in data.keys():
+            sets_data = data.pop('sets')
+        if 'collections' in data.keys():
+            cols_data = data.pop('collections')
+        obj = self.create(**dict(data.items() + kwargs.items()))
+        if sets_data:
+            self._add_sets(obj, sets_data)
+        return obj, cols_data
+        
+    def create_recursive(self, col, parent=None, flickr_user=None):
+        obj, children = self.create_obj(col, parent=parent, flickr_user=flickr_user)
+        if children != None:
+            parent = obj
+            for child in children:
+                self.create_recursive(child, parent, flickr_user)
+        return True
+    
+    def create_from_usertree_json(self, flickr_user, tree, **kwargs):
+        collections = bunchify(tree['collections']['collection'])
+        for col in collections:
+            self.create_recursive(col, parent=None, flickr_user=flickr_user)                 
+        return True
+    
+    
 class Collection(FlickrModel):
     
-    server = models.PositiveSmallIntegerField()
-    secret = models.CharField(max_length=10)    
     parent = models.ForeignKey('self', null=True)
     title = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True)
     icon = models.URLField(max_length=255, null=True, blank=True)    
     sets = models.ManyToManyField(PhotoSet, null=True)    
     date_created = models.DateTimeField(null=True, blank=True)
+    
+    objects = CollectionManager()
     
     class Meta:
         ordering = ('-date_created',)
