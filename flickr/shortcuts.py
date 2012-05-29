@@ -64,3 +64,17 @@ def get_user_json(nsid, token):
     api = FlickrApi(FLICKR_KEY, FLICKR_SECRET, token)
     return bunchify(api.get(method='flickr.people.getInfo', user_id=nsid))
     
+    
+def get_collections_tree_json(nsid=None, collection_id=None, token):
+    """tree for user or tree for collection"""
+    api = FlickrApi(FLICKR_KEY, FLICKR_SECRET, token)
+    return bunchify(api.get(method='collections.getTree', user_id=nsid, collection_id=collection_id))
+        
+def get_collection_info_json(collection_id, token):
+    api = FlickrApi(FLICKR_KEY, FLICKR_SECRET, token)
+    return bunchify(api.get(method='collections.getInfo', collection_id=collection_id))
+    
+    
+    
+    
+    
