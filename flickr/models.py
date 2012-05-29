@@ -2,7 +2,6 @@
 # encoding: utf-8
 from bunch import \
     bunchify #for json.dot.notation instead of json['annoying']['dict']
-from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
@@ -10,14 +9,9 @@ from django.db import models
 from django.utils.timezone import now
 from taggit.managers import TaggableManager
 from flickr.flickr_spec import FLICKR_PHOTO_SIZES, FLICKR_PHOTO_URL_PAGE_SIZES, build_photo_source
+from flickr.utils import ts_to_dt, unslash
 
 URL_BASE = getattr(settings, 'FLICKR_URL_BASE', 'http://flickr.com/')
-
-def ts_to_dt(timestamp):
-    return datetime.fromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
-
-def unslash(url):
-    return url.replace('\\/','/')
 
 
 class FlickrUserManager(models.Manager):
@@ -106,6 +100,7 @@ class BigIntegerField(models.IntegerField):
 
 
 class PhotoManager(models.Manager):
+    allowed_sizes = ['Square', 'Thumbnail', 'Small', 'Medium 640', 'Large', 'Original',]
 
     def visible(self, *args, **kwargs):
         return self.get_query_set().filter(show=True).filter(*args, **kwargs)
@@ -130,11 +125,10 @@ class PhotoManager(models.Manager):
         if flickr_user:
             photo_data['user'] = flickr_user
         if sizes:
-            size_label_conv = {'Square': 'square', 'Thumbnail': 'thumb', 'Small': 'small', 'Medium 640': 'medium', 'Large': 'large', 'Original': 'ori',}
             size_json = bunchify(sizes['sizes']['size'])
             for size in size_json:
-                if size.label in size_label_conv.keys():
-                    label = size_label_conv[size.label]
+                if size.label in self.allowed_sizes and size.label in FLICKR_PHOTO_SIZES.keys():
+                    label = FLICKR_PHOTO_SIZES[size.label]['label']
                     photo_data = dict(photo_data.items() + {
                                     label+'_width': size.width, label+'_height': size.height,
                                     label+'_source': size.source, label+'_url': unslash(size.url),

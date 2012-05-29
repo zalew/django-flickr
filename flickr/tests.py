@@ -7,12 +7,10 @@ from django.test import TestCase
 from django.test.client import Client
 from flickr.models import FlickrUser, Photo, PhotoSet, Collection
 from flickr.flickr_spec import FLICKR_PHOTO_SIZES
+from flickr.utils import unslash
 from flickr.tests_data import json_user, json_info, json_sizes, json_exif, \
     json_set_info, json_set_photos, json_collection_info,\
     json_collection_tree_user
-
-def unslash(url):
-    return url.replace('\\/','/')
 
 class FlickrModelTests(TestCase):
 
