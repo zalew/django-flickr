@@ -95,7 +95,11 @@ class FlickrModelTests(TestCase):
         #cols = Collection.objects.filter(user=self.flickr_user).exclude(sets__isnull=True)
         #self.assertEqual(cols.count(), 7)
         
-        
+        Collection.objects.create_or_update_from_usertree_json(flickr_user=self.flickr_user, tree=json_collection_tree_user)
+        cols = Collection.objects.filter(user=self.flickr_user)
+        self.assertEqual(cols.count(), 9)
+        cols = Collection.objects.filter(user=self.flickr_user).exclude(parent=None)
+        self.assertEqual(cols.count(), 6)
         
         
         

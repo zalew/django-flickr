@@ -439,24 +439,44 @@ class CollectionManager(models.Manager):
             sets_data = data.pop('sets')
         if 'collections' in data.keys():
             cols_data = data.pop('collections')
-        obj = self.create(**dict(data.items() + kwargs.items()))
+        if kwargs.pop('update', False):
+            obj = self.filter(flickr_id=data['flickr_id']).update(**dict(data.items() + kwargs.items()))
+            if obj: #filter().update() didn't return object
+                obj = self.get(flickr_id=data['flickr_id'])                
+            else:                            
+                obj = self.create(**dict(data.items() + kwargs.items()))    
+        else:
+            obj = self.create(**dict(data.items() + kwargs.items()))
         if sets_data:
             self._add_sets(obj, sets_data)
         return obj, cols_data
-        
-    def create_recursive(self, col, parent=None, flickr_user=None):
-        obj, children = self.create_obj(col, parent=parent, flickr_user=flickr_user)
+    
+    def create_or_update_obj(self, info, parent=None, flickr_user=None, **kwargs):
+        return self.create_obj(info, parent, flickr_user, update=True, **kwargs)
+    
+    def create_recursive(self, col, parent=None, flickr_user=None, **kwargs):
+        update_flag = kwargs.pop('update', False)
+        if update_flag:
+            obj, children = self.create_or_update_obj(col, parent, flickr_user)
+        else:
+            obj, children = self.create_obj(col, parent, flickr_user)
         if children != None:
             parent = obj
             for child in children:
-                self.create_recursive(child, parent, flickr_user)
+                if update_flag:
+                    self.create_or_update_obj(child, parent, flickr_user)
+                else:
+                    self.create_recursive(child, parent, flickr_user)
         return True
     
     def create_from_usertree_json(self, flickr_user, tree, **kwargs):
         collections = bunchify(tree['collections']['collection'])
         for col in collections:
-            self.create_recursive(col, parent=None, flickr_user=flickr_user)                 
+            self.create_recursive(col, parent=None, flickr_user=flickr_user, **kwargs)                 
         return True
+    
+    def create_or_update_from_usertree_json(self, flickr_user, tree, **kwargs):
+        return self.create_from_usertree_json(flickr_user, tree, update=True, **kwargs)
     
     
 class Collection(FlickrModel):
