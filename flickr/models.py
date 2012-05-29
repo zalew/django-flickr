@@ -431,6 +431,97 @@ class PhotoSet(FlickrModel):
                 pass
     
     
+
+class CollectionManager(models.Manager):
+    
+    def _add_sets(self, obj, sets):
+        """add sets that are present in our database"""
+        flickr_sets = PhotoSet.objects.filter(flickr_id__in=[s.id for s in sets])
+        obj.sets.add(*[s.id for s in flickr_sets])           
+                        
+    def _prepare_data(self, info, parent=None, flickr_user=None):
+        col = bunchify(info)
+        data = {'flickr_id': col.id, 
+                'title': col.title, 'description': col.description,                   
+                'parent': parent, 'last_sync' : now(),
+                }        
+        if flickr_user:
+            data['user'] = flickr_user
+        if 'date_create' in col.keys():
+            data['date_created'] = ts_to_dt(col.date_create)
+        if 'set' in col.keys():
+            data['sets'] = col.set
+        if 'collection' in col.keys():
+            data['collections'] = col.collection
+        return data
+        
+    def create_obj(self, info, parent=None, flickr_user=None, **kwargs):
+        data = self._prepare_data(info, parent, flickr_user)
+        sets_data = cols_data = None
+        if 'sets' in data.keys():
+            sets_data = data.pop('sets')
+        if 'collections' in data.keys():
+            cols_data = data.pop('collections')
+        if kwargs.pop('update', False):
+            obj = self.filter(flickr_id=data['flickr_id']).update(**dict(data.items() + kwargs.items()))
+            if obj: #filter().update() didn't return object
+                obj = self.get(flickr_id=data['flickr_id'])                
+            else:                            
+                obj = self.create(**dict(data.items() + kwargs.items()))    
+        else:
+            obj = self.create(**dict(data.items() + kwargs.items()))
+        if sets_data:
+            self._add_sets(obj, sets_data)
+        return obj, cols_data
+    
+    def create_or_update_obj(self, info, parent=None, flickr_user=None, **kwargs):
+        return self.create_obj(info, parent, flickr_user, update=True, **kwargs)
+    
+    def create_recursive(self, col, parent=None, flickr_user=None, **kwargs):
+        update_flag = kwargs.pop('update', False)
+        if update_flag:
+            obj, children = self.create_or_update_obj(col, parent, flickr_user)
+        else:
+            obj, children = self.create_obj(col, parent, flickr_user)
+        if children != None:
+            parent = obj
+            for child in children:
+                if update_flag:
+                    self.create_or_update_obj(child, parent, flickr_user)
+                else:
+                    self.create_recursive(child, parent, flickr_user)
+        return True
+    
+    def create_from_usertree_json(self, flickr_user, tree, **kwargs):
+        collections = tree['collections']['collection']        
+        for col in collections:
+            self.create_recursive(col, parent=None, flickr_user=flickr_user, **kwargs)                 
+        return True
+    
+    def create_or_update_from_usertree_json(self, flickr_user, tree, **kwargs):
+        return self.create_from_usertree_json(flickr_user, tree, update=True, **kwargs)
+    
+    
+class Collection(FlickrModel):
+    
+    parent = models.ForeignKey('self', null=True)
+    title = models.CharField(max_length=200)
+    description = models.TextField(null=True, blank=True)
+    icon = models.URLField(max_length=255, null=True, blank=True)    
+    sets = models.ManyToManyField(PhotoSet, null=True)    
+    date_created = models.DateTimeField(null=True, blank=True)
+    
+    objects = CollectionManager()
+    
+    class Meta:
+        ordering = ('-date_created',)
+        get_latest_by = 'date_created'
+
+    def __unicode__(self):
+        return u'%s' % self.title
+    
+    
+    
 class JsonCache(models.Model):
     
     flickr_id = models.CharField(max_length=50, null=True, blank=True)

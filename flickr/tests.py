@@ -4,9 +4,10 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
-from flickr.models import FlickrUser, Photo, PhotoSet
+from flickr.models import FlickrUser, Photo, PhotoSet, Collection
 from flickr.tests_data import json_user, json_info, json_sizes, json_exif, \
-    json_set_info, json_set_photos
+    json_set_info, json_set_photos, json_collection_info,\
+    json_collection_tree_user
 
     
 class FlickrModelTests(TestCase):
@@ -78,6 +79,33 @@ class FlickrModelTests(TestCase):
         self.assertEqual(photoset.secret, json_set_info['photoset']['secret'])
         self.assertEqual(photoset.date_posted, datetime.fromtimestamp(int(json_set_info['photoset']['date_create'])).strftime('%Y-%m-%d %H:%M:%S'))
         self.assertEqual(photoset.photos.all().count(), 1)        
+        
+        
+    def test_collection(self):
+        
+        Collection.objects.create_from_usertree_json(flickr_user=self.flickr_user, tree=json_collection_tree_user)
+                
+        cols = Collection.objects.filter(user=self.flickr_user)
+        #for col in cols:
+        #    print col
+        #    print col.sets.all()
+        self.assertEqual(cols.count(), 9)
+        cols = Collection.objects.filter(user=self.flickr_user).exclude(parent=None)
+        self.assertEqual(cols.count(), 6)
+        #cols = Collection.objects.filter(user=self.flickr_user).exclude(sets__isnull=True)
+        #self.assertEqual(cols.count(), 7)
+        
+        Collection.objects.create_or_update_from_usertree_json(flickr_user=self.flickr_user, tree=json_collection_tree_user)
+        cols = Collection.objects.filter(user=self.flickr_user)
+        self.assertEqual(cols.count(), 9)
+        cols = Collection.objects.filter(user=self.flickr_user).exclude(parent=None)
+        self.assertEqual(cols.count(), 6)
+        
+        
+        
+        
+        
+        
         
         
         

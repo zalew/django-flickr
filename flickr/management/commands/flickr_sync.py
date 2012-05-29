@@ -4,9 +4,10 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
 from flickr.api import FlickrApi
-from flickr.models import FlickrUser, Photo, JsonCache, PhotoSet
+from flickr.models import FlickrUser, Photo, JsonCache, PhotoSet, Collection
 from flickr.shortcuts import get_all_photos, get_photo_details_jsons,\
-    get_photosets_json, get_photoset_photos_json, get_user_json
+    get_photosets_json, get_photoset_photos_json, get_user_json,\
+    get_collections_tree_json
 from optparse import make_option
 import datetime
 import time
@@ -36,10 +37,14 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
                                              
         make_option('--force_update', action='store_true', dest='force_update', default=False,
             help='If photo in db, override with new data.'),
+
         
         make_option('--photosets', action='store_true', dest='photosets', default=False,
             help='Sync photosets (only photosets, no photos sync action is run). Photos must be synced first. If photo from photoset not in our db, it will be ommited.'),
-               
+        
+        make_option('--collections', action='store_true', dest='collections', default=False,
+            help='Sync collections. Photos and sets must be synced first.'),
+                      
         make_option('--photos', action='store_true', dest='photos', default=False,
             help='Sync photos (only photos, no photosets sync action is run).'),
 
@@ -48,6 +53,7 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
 
         make_option('--update_tags', action='store_true', dest='update_tags', default=False,
             help='Update tags when updating a photo.'),
+
     
         make_option('--test', '-t', action='store_true', dest='test', default=False,
             help='Test/simulate. Don\'t write results to db.'),         
@@ -85,6 +91,9 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
                 print 'Syncing photosets'
             self.user_photosets(**options)
             self.flickr_user.save() # bump last_sync
+        elif options.get('collections'):
+            self.user_collections(**options)
+            self.flickr_user.save() # bump last_sync
         elif options.get('photos'):
             if options.get('verbosity') > 0:
                 print 'Syncing photos'
@@ -94,8 +103,9 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
             """default behavior: sync pics newer than the newest and user info"""
             if options.get('verbosity') > 0:
                 print 'Syncing default'
+            self.user_info(**options)
             self.user_photos(**options)
-            self.user_info(**options) # this already bumps last_sync
+            self.flickr_user.save() # bump last_sync
             
         t2 = time.time()
         print 'Exec time: '+str(round(t2-t1))
@@ -214,8 +224,31 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
                     time.sleep(2) #so we don't get our connections dropped by flickr api'
         else:
             print '- nothing to sync'
-        print 'COMPLETE: user photosets sync'        
+        print 'COMPLETE: user photosets sync'
 
+        
+    
+    def user_collections(self, **options):
+        flickr_user = self.flickr_user
+        print 'BEGIN: user collections sync'
+        tree = get_collections_tree_json(nsid=flickr_user.nsid, token=flickr_user.token)
+        length = len(tree)
+        if length > 0:
+            print '- got %d collections in root of tree for user' % length
+            if not options.get('test', False):
+                    if options.get('initial', False):
+                        Collection.objects.create_from_usertree_json(flickr_user, tree)
+                    else:
+                        Collection.objects.create_or_update_from_usertree_json(flickr_user, tree)                
+        else:
+            print '- nothing to sync'           
+        
+        print 'COMPLETE: user collections sync'
+        
+        
+        
+        
+        
         
         
     
