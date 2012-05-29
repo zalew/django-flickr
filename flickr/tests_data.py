@@ -124,3 +124,87 @@ json_set_photos = { "photoset": { "id": "72157627449841099", "primary": "6104844
             { "id": "6105388484", "secret": "3xxxx45b", "server": "6078", "farm": 7, "title": "kwiatki", "isprimary": 0 }, 
     ], "page": 1, "per_page": "500", "perpage": "500", "pages": 1, "total": 6 }, "stat": "ok" }
 
+
+
+json_collection_tree_user = { "collections": { 
+    "collection": [
+      { "id": "2306806-72157628832150727", "title": "Travel", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif", 
+        "collection": [
+          { "id": "2306806-72157628832176039", "title": "Germany", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" },
+          { "id": "2306806-72157628832174511", "title": "Turkey", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" },
+          { "id": "2306806-72157628832172707", "title": "Oman", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" },
+          { "id": "2306806-72157628832793585", "title": "Netherlands", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" },
+          { "id": "2306806-72157628832167505", "title": "United Arab Emirates", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" },
+          { "id": "2306806-72157628832164035", "title": "Morocco", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" }
+        ] },
+      { "id": "2306806-72157628829299935", "title": "Warszawa", "description": "", "iconlarge": "http:\/\/farm8.staticflickr.com\/7005\/cols\/72157628829299935_b92bf5d0fd_l.jpg", "iconsmall": "http:\/\/farm8.staticflickr.com\/7005\/cols\/72157628829299935_b92bf5d0fd_s.jpg", 
+        "set": [
+          { "id": "72157628829392599", "title": "Bielany", "description": "" },
+          { "id": "72157617923644738", "title": "Warszawa", "description": "" },
+          { "id": "72157620542349675", "title": "ej zrobcie tutaj miejsce z deka", "description": "bo bede zaraz tatatatanczyc breka" },
+          { "id": "72157620597366137", "title": "warszawski deszcz", "description": "" },
+          { "id": "72157622271517834", "title": "praskie spotkania z kultura", "description": "" }
+        ] },
+      { "id": "2306806-72157628829439561", "title": "moto", "description": "", "iconlarge": "http:\/\/farm8.staticflickr.com\/7005\/cols\/72157628829439561_0a97496f50_l.jpg", "iconsmall": "http:\/\/farm8.staticflickr.com\/7005\/cols\/72157628829439561_0a97496f50_s.jpg", 
+        "set": [
+          { "id": "72157620884882249", "title": "bmw e23", "description": "zim zimma who got the keys to ma bimma\n\n<a href=\"http:\/\/bmwe23.wordpress.com\" rel=\"nofollow\">bmwe23.wordpress.com<\/a>\n\n-----------------------------------------------------------" },
+          { "id": "72157623974867442", "title": "BMW Klub Polska - Zlot Wiosna 2010", "description": "<a href=\"http:\/\/bmw-klub.pl\" rel=\"nofollow\">bmw-klub.pl<\/a>" },
+          { "id": "72157623823894012", "title": "e31 w galerii mockotów ", "description": "  <a href=\"http:\/\/posterous.com\" rel=\"nofollow\">Posted via email<\/a>  from <a href=\"http:\/\/jakubzalewski.net\/e31-w-galerii-mockotow\" rel=\"nofollow\">zalew<\/a>  " },
+          { "id": "72157622943467192", "title": "Barbórka 2009 - Karowa", "description": "" },
+          { "id": "72157622943438594", "title": "Ułęż 2009", "description": "spotkanie ścigancko-towarzyskie, BMW Klub Polska i inni" },
+          { "id": "72157617139554505", "title": "BMW Klub Polska - Zlot Jesień 2008", "description": "" }
+        ] }
+    ] }, "stat": "ok" }
+
+# collection with sets
+json_collection_tree_col_sets = { "collections": { 
+    "collection": [
+      { "id": "2306806-72157628829299935", "title": "Warszawa", "description": "", "iconlarge": "http:\/\/farm8.staticflickr.com\/7005\/cols\/72157628829299935_b92bf5d0fd_l.jpg", "iconsmall": "http:\/\/farm8.staticflickr.com\/7005\/cols\/72157628829299935_b92bf5d0fd_s.jpg", 
+        "set": [
+          { "id": "72157628829392599", "title": "Bielany", "description": "" },
+          { "id": "72157617923644738", "title": "Warszawa", "description": "" },
+          { "id": "72157620542349675", "title": "ej zrobcie tutaj miejsce z deka", "description": "bo bede zaraz tatatatanczyc breka" },
+          { "id": "72157620597366137", "title": "warszawski deszcz", "description": "" },
+          { "id": "72157622271517834", "title": "praskie spotkania z kultura", "description": "" }
+        ] }
+    ] }, "stat": "ok" }
+
+#collection with other collections
+json_collection_tree_col_cols = { "collections": { 
+    "collection": [
+      { "id": "2306806-72157628832150727", "title": "Travel", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif", 
+        "collection": [
+          { "id": "2306806-72157628832176039", "title": "Germany", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" },
+          { "id": "2306806-72157628832174511", "title": "Turkey", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" },
+          { "id": "2306806-72157628832172707", "title": "Oman", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" },
+          { "id": "2306806-72157628832793585", "title": "Netherlands", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" },
+          { "id": "2306806-72157628832167505", "title": "United Arab Emirates", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" },
+          { "id": "2306806-72157628832164035", "title": "Morocco", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" }
+        ] },
+      { "id": "2306806-72157628832176039", "title": "Germany", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" },
+      { "id": "2306806-72157628832174511", "title": "Turkey", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" },
+      { "id": "2306806-72157628832172707", "title": "Oman", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" },
+      { "id": "2306806-72157628832793585", "title": "Netherlands", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" },
+      { "id": "2306806-72157628832167505", "title": "United Arab Emirates", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" },
+      { "id": "2306806-72157628832164035", "title": "Morocco", "description": "", "iconlarge": "\/images\/collection_default_l.gif", "iconsmall": "\/images\/collection_default_s.gif" }
+    ] }, "stat": "ok" }
+
+json_collection_info = { "collection": { "id": "2306806-72157628829299935", 
+    "title": { "_content": "Warszawa" }, 
+    "description": { "_content": "" }, "child_count": 5, "datecreate": "1326320254", "iconlarge": "http:\/\/farm8.staticflickr.com\/7005\/cols\/72157628829299935_b92bf5d0fd_l.jpg", "iconsmall": "http:\/\/farm8.staticflickr.com\/7005\/cols\/72157628829299935_b92bf5d0fd_s.jpg", 
+    "iconphotos": { 
+      "photo": [
+        { "id": "3668197375", "owner": "91259891@N00", "secret": "d27c065ed5", "server": "3543", "farm": 4, "title": "break na starówce", "ispublic": 1, "isfriend": 0, "isfamily": 0 },
+        { "id": "3893587576", "owner": "91259891@N00", "secret": "894ef4f468", "server": "2539", "farm": 3, "title": "smalec", "ispublic": 1, "isfriend": 0, "isfamily": 0 },
+        { "id": "3668202733", "owner": "91259891@N00", "secret": "4326db1cf4", "server": "3305", "farm": 4, "title": "break na starówce", "ispublic": 1, "isfriend": 0, "isfamily": 0 },
+        { "id": "6015004455", "owner": "91259891@N00", "secret": "55671d24cb", "server": "6020", "farm": 7, "title": "Centrum Nauki Kopernik", "ispublic": 1, "isfriend": 0, "isfamily": 0 },
+        { "id": "3893589024", "owner": "91259891@N00", "secret": "a9336b8b25", "server": "2552", "farm": 3, "title": "podwórko", "ispublic": 1, "isfriend": 0, "isfamily": 0 },
+        { "id": "5242581750", "owner": "91259891@N00", "secret": "57af4e803d", "server": "5121", "farm": 6, "title": "stadion most", "ispublic": 1, "isfriend": 0, "isfamily": 0 },
+        { "id": "6015002763", "owner": "91259891@N00", "secret": "525b7532aa", "server": "6006", "farm": 7, "title": "pasaż", "ispublic": 1, "isfriend": 0, "isfamily": 0 },
+        { "id": "5242583420", "owner": "91259891@N00", "secret": "db97b4bff3", "server": "5241", "farm": 6, "title": "stadion", "ispublic": 1, "isfriend": 0, "isfamily": 0 },
+        { "id": "3733608957", "owner": "91259891@N00", "secret": "a61fe74e1d", "server": "2449", "farm": 3, "title": "plac teatralny", "ispublic": 1, "isfriend": 0, "isfamily": 0 },
+        { "id": "3668195679", "owner": "91259891@N00", "secret": "3bf5805354", "server": "3582", "farm": 4, "title": "break na starówce", "ispublic": 1, "isfriend": 0, "isfamily": 0 },
+        { "id": "6015555176", "owner": "91259891@N00", "secret": "160e5378b2", "server": "6027", "farm": 7, "title": "Tamka", "ispublic": 1, "isfriend": 0, "isfamily": 0 },
+        { "id": "3893588506", "owner": "91259891@N00", "secret": "fb558eb347", "server": "2477", "farm": 3, "title": "bazar różyckiego", "ispublic": 1, "isfriend": 0, "isfamily": 0 }
+      ] }, "server": "7005", "secret": "b92bf5d0fd" }, "stat": "ok" }
+
