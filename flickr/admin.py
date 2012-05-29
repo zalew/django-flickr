@@ -1,5 +1,5 @@
 from django.contrib import admin
-from flickr.models import Photo, FlickrUser, PhotoSet
+from flickr.models import Photo, FlickrUser, PhotoSet, Collection
 
 
 
@@ -25,6 +25,18 @@ class PhotoSetAdmin(admin.ModelAdmin):
     raw_id_fields = ['photos',]
 
 admin.site.register(PhotoSet, PhotoSetAdmin)
+
+
+class CollectionAdmin(admin.ModelAdmin):
+    date_hierarchy = 'date_created'
+    list_display = ('title', 'flickr_id', 'parent', 'user', 'date_created')
+    list_display_links = ('title', 'flickr_id')
+    list_filter = ('date_created',)
+    #prepopulated_fields = {'slug': ('title',)}
+    search_fields = ['title', 'description']
+    raw_id_fields = ['sets', 'parent']
+
+admin.site.register(Collection, CollectionAdmin)
 
 
 class FlickrUserAdmin(admin.ModelAdmin):
