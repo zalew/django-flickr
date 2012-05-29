@@ -470,7 +470,7 @@ class CollectionManager(models.Manager):
         return True
     
     def create_from_usertree_json(self, flickr_user, tree, **kwargs):
-        collections = bunchify(tree['collections']['collection'])
+        collections = tree['collections']['collection']        
         for col in collections:
             self.create_recursive(col, parent=None, flickr_user=flickr_user, **kwargs)                 
         return True
