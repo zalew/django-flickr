@@ -378,7 +378,7 @@ class PhotoSize(object):
             source = None
         finally:
             if not source:
-                source = build_photo_url(self.photo.farm, self.photo.server, self.photo.flickr_id, self.secret, self.size, self.format)
+                source = build_photo_source(self.photo.farm, self.photo.server, self.photo.flickr_id, self.secret, self.size, self.format)
             return source
     source = property(_get_source)
 
