@@ -207,38 +207,6 @@ class Photo(FlickrModel):
 
     slug = models.SlugField(max_length=255, null=True, blank=True)
 
-    """http://www.flickr.com/services/api/explore/flickr.photos.getSizes"""
-
-    square_width = models.PositiveIntegerField(null=True, blank=True)
-    square_height = models.PositiveIntegerField(null=True, blank=True)
-    square_source = models.URLField(max_length=255, null=True, blank=True)
-    square_url = models.URLField(max_length=255, null=True, blank=True)
-
-    thumb_width = models.PositiveIntegerField(null=True, blank=True)
-    thumb_height = models.PositiveIntegerField(null=True, blank=True)
-    thumb_source = models.URLField(max_length=255, null=True, blank=True)
-    thumb_url = models.URLField(max_length=255, null=True, blank=True)
-
-    small_width = models.PositiveIntegerField(null=True, blank=True)
-    small_height = models.PositiveIntegerField(null=True, blank=True)
-    small_source = models.URLField(max_length=255, null=True, blank=True)
-    small_url = models.URLField(max_length=255, null=True, blank=True)
-
-    medium_width = models.PositiveIntegerField(null=True, blank=True)
-    medium_height = models.PositiveIntegerField(null=True, blank=True)
-    medium_source = models.URLField(max_length=255, null=True, blank=True)
-    medium_url = models.URLField(max_length=255, null=True, blank=True)
-
-    large_width = models.PositiveIntegerField(null=True, blank=True)
-    large_height = models.PositiveIntegerField(null=True, blank=True)
-    large_source = models.URLField(max_length=255, null=True, blank=True)
-    large_url = models.URLField(max_length=255, null=True, blank=True)
-
-    ori_width = models.PositiveIntegerField(null=True, blank=True)
-    ori_height = models.PositiveIntegerField(null=True, blank=True)
-    ori_source = models.URLField(max_length=255, null=True, blank=True)
-    ori_url = models.URLField(max_length=255, null=True, blank=True)
-
     """http://www.flickr.com/services/api/explore/flickr.photos.getExif
     Lots of data varying type and values, let's just put'em (json string in exif) there and we'll think later."""
 
@@ -351,6 +319,18 @@ class Photo(FlickrModel):
                 pass
             setattr(self, '_previous_in_ps%s' % photoset.flickr_id, photo)
         return getattr(self, '_previous_in_ps%s' % photoset.flickr_id)
+
+
+class PhotoSizeData(models.Model):
+    photo = models.ForeignKey(Photo, related_name='sizes')
+    size = models.CharField(max_length = 10, choices = [(v['label'], k) for k,v in FLICKR_PHOTO_SIZES.iteritems()])
+    width = models.PositiveIntegerField(null=True, blank=True)
+    height = models.PositiveIntegerField(null=True, blank=True)
+    source = models.URLField(null=True, blank=True)
+    url = models.URLField(null=True, blank=True)
+
+    class Meta:
+        unique_together = (('photo', 'size'), )
 
 
 """ Dynamic addition of properties to access photo sizes information (stored in photo model fields) """
