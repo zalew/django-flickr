@@ -1,0 +1,21 @@
+.. _usage-commands:
+
+Management Commands
+===================
+  
+
+Sync photos database
+---------------------
+
+::
+
+./manage.py flickr_sync [options]
+
+
+Download photos
+----------------
+
+::
+
+./manage.py flickr_download [options]
+

@@ -1,0 +1,241 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Templates &mdash; django-flickr 0.2.4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.2.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="django-flickr 0.2.4 documentation" href="index.html" />
+    <link rel="up" title="Usage" href="usage.html" />
+    <link rel="next" title="Flickr API" href="usage-api.html" />
+    <link rel="prev" title="Models" href="usage-models.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="usage-api.html" title="Flickr API"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="usage-models.html" title="Models"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">django-flickr 0.2.4 documentation</a> &raquo;</li>
+          <li><a href="usage.html" accesskey="U">Usage</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="templates">
+<span id="usage-templates"></span><h1>Templates<a class="headerlink" href="#templates" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-django"><div class="highlight"><pre><span class="cp">{%</span> <span class="k">load</span> <span class="nv">flickr_tags</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</div>
+<p>Small photo linking to flickr page</p>
+<div class="highlight-django"><div class="highlight"><pre><span class="cp">{%</span> <span class="k">flickr_photo</span> <span class="nv">photo</span> <span class="s2">&quot;small&quot;</span> <span class="m">1</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</div>
+<p>Large photo without link</p>
+<div class="highlight-django"><div class="highlight"><pre><span class="cp">{%</span> <span class="k">flickr_photo</span> <span class="nv">photo</span> <span class="s2">&quot;large&quot;</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</div>
+<div class="section" id="photos">
+<h2>Photos<a class="headerlink" href="#photos" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-django"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">{%</span> <span class="k">load</span> <span class="nv">flickr_tags</span> <span class="cp">%}</span><span class="x"></span>
+
+<span class="x">&lt;h1&gt;Django-Flickr (Demo Page)&lt;/h1&gt;</span>
+
+<span class="x">&lt;h2&gt;Photos&lt;/h2&gt;</span>
+<span class="x">     &lt;ul class=&quot;flickr photos&quot;&gt;</span>
+<span class="x">     </span><span class="cp">{%</span> <span class="k">for</span> <span class="nv">photo</span> <span class="k">in</span> <span class="nv">photo_list</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">     &lt;li&gt;</span><span class="cp">{%</span> <span class="k">flickr_photo</span> <span class="nv">photo</span> <span class="s2">&quot;small&quot;</span> <span class="m">1</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">             &lt;h3&gt;&lt;a href=&quot;</span><span class="cp">{{</span> <span class="nv">photo.get_absolute_url</span> <span class="cp">}}</span><span class="x">&quot;&gt;</span><span class="cp">{{</span> <span class="nv">photo.title</span> <span class="cp">}}</span><span class="x">&lt;/a&gt;&lt;/h3&gt;</span>
+<span class="x">             &lt;p&gt;</span><span class="cp">{{</span> <span class="nv">photo.description</span> <span class="cp">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">             &lt;dl&gt;</span>
+<span class="x">                     &lt;dt&gt;taken&lt;/dt&gt;&lt;dd&gt;</span><span class="cp">{{</span> <span class="nv">photo.date_taken</span><span class="o">|</span><span class="nf">date</span><span class="s2">:&quot;d.m.Y&quot;</span> <span class="cp">}}</span><span class="x">&lt;/dd&gt;</span>
+<span class="x">                     &lt;dt&gt;tags&lt;/dt&gt;&lt;dd&gt;</span>
+<span class="x">                             &lt;ul class=&quot;tags&quot;&gt;</span>
+<span class="x">                                     </span><span class="cp">{%</span> <span class="k">for</span> <span class="nv">tag</span> <span class="k">in</span> <span class="nv">photo.tags.all</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">                                             &lt;li&gt;#</span><span class="cp">{{</span> <span class="nv">tag</span> <span class="cp">}}</span><span class="x">&lt;/li&gt;</span>
+<span class="x">                                     </span><span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">                                     &lt;/ul&gt;</span>
+<span class="x">                     &lt;/dd&gt;</span>
+<span class="x">             &lt;/dl&gt;</span>
+<span class="x">     &lt;/li&gt;</span>
+<span class="x">     </span><span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">     &lt;/ul&gt;</span>
+<span class="x">     </span><span class="cp">{%</span> <span class="k">include</span> <span class="s2">&quot;flickr/pagination.html&quot;</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="photosets">
+<h2>Photosets<a class="headerlink" href="#photosets" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-django"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">{%</span> <span class="k">load</span> <span class="nv">flickr_tags</span> <span class="cp">%}</span><span class="x"></span>
+
+<span class="x">&lt;h2&gt;Photosets&lt;/h2&gt;</span>
+
+<span class="x">     &lt;ul class=&quot;flickr sets&quot;&gt;</span>
+<span class="x">     </span><span class="cp">{%</span> <span class="k">for</span> <span class="nv">set</span> <span class="k">in</span> <span class="nv">photosets</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">     </span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">set.cover</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">     &lt;li&gt;&lt;a href=&quot;</span><span class="cp">{{</span> <span class="nv">set.get_absolute_url</span> <span class="cp">}}</span><span class="x">&quot;&gt;</span><span class="cp">{%</span> <span class="k">flickr_photo</span> <span class="nv">set.cover</span> <span class="s2">&quot;thumb&quot;</span> <span class="cp">%}</span><span class="x">&lt;/a&gt;</span>
+<span class="x">             &lt;h3&gt;&lt;a href=&quot;</span><span class="cp">{{</span> <span class="nv">set.get_absolute_url</span> <span class="cp">}}</span><span class="x">&quot;&gt;</span><span class="cp">{{</span> <span class="nv">set.title</span> <span class="cp">}}</span><span class="x">&lt;/a&gt;&lt;/h3&gt;</span>
+<span class="x">     &lt;/li&gt;</span>
+<span class="x">     </span><span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">     </span><span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">     &lt;/ul&gt;</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="tags">
+<h2>Tags<a class="headerlink" href="#tags" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-django"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">{%</span> <span class="k">load</span> <span class="nv">taggit_extras</span> <span class="cp">%}</span><span class="x"></span>
+
+<span class="x">&lt;h2&gt;Tags&lt;/h2&gt;</span>
+
+<span class="x">     </span><span class="cp">{%</span> <span class="k">get_taglist</span> <span class="k">as</span> <span class="nv">tags</span> <span class="nv">for</span> <span class="s1">&#39;flickr&#39;</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">     &lt;ul class=&quot;tags&quot;&gt;</span>
+<span class="x">     </span><span class="cp">{%</span> <span class="k">for</span> <span class="nv">tag</span> <span class="k">in</span> <span class="nv">tags</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">             &lt;li&gt;#</span><span class="cp">{{</span><span class="nv">tag</span><span class="cp">}}</span><span class="x"> (</span><span class="cp">{{</span><span class="nv">tag.num_times</span><span class="cp">}}</span><span class="x">)&lt;/li&gt;</span>
+<span class="x">     </span><span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">     &lt;/ul&gt;</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Templates</a><ul>
+<li><a class="reference internal" href="#photos">Photos</a></li>
+<li><a class="reference internal" href="#photosets">Photosets</a></li>
+<li><a class="reference internal" href="#tags">Tags</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="usage-models.html"
+                        title="previous chapter">Models</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="usage-api.html"
+                        title="next chapter">Flickr API</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/usage-templates.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="usage-api.html" title="Flickr API"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="usage-models.html" title="Models"
+             >previous</a> |</li>
+        <li><a href="index.html">django-flickr 0.2.4 documentation</a> &raquo;</li>
+          <li><a href="usage.html" >Usage</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Jakub Zalewski.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

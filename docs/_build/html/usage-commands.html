@@ -1,0 +1,184 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Management Commands &mdash; django-flickr 0.2.4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.2.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="django-flickr 0.2.4 documentation" href="index.html" />
+    <link rel="up" title="Usage" href="usage.html" />
+    <link rel="next" title="Models" href="usage-models.html" />
+    <link rel="prev" title="Introduction" href="usage-intro.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="usage-models.html" title="Models"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="usage-intro.html" title="Introduction"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">django-flickr 0.2.4 documentation</a> &raquo;</li>
+          <li><a href="usage.html" accesskey="U">Usage</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="management-commands">
+<span id="usage-commands"></span><h1>Management Commands<a class="headerlink" href="#management-commands" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="sync-photos-database">
+<h2>Sync photos database<a class="headerlink" href="#sync-photos-database" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><pre>./manage.py flickr_sync [options]</pre>
+</div>
+<div class="highlight-python"><pre>-i, --initial         Initial sync. For improved performance it assumpts db
+                      flickr tables are empty and blindly hits create().
+-d DAYS, --days=DAYS  Sync photos from the last n days. Useful for cron
+                      jobs.
+-u USER_ID, --user=USER_ID
+                      Sync for a particular user. Default is 1 (in most
+                      cases it's the admin and you're using it only for
+                      yourself).
+--page=PAGE           Grab a specific portion of photos. To be used with
+                      --per_page.
+--per_page=PER_PAGE   How many photos per page should we grab? Set low value
+                      (10-50) for daily/weekly updates so there is less to
+                      parse, set high value (200-500) for initial sync and
+                      big updates so we hit flickr less.
+--force_update        If photo in db, override with new data.
+--photosets           Sync photosets (only photosets, no photos sync action
+                      is run). Photos must be synced first. If photo from
+                      photoset not in our db, it will be ommited.
+--collections         Sync collections. Photos and sets must be synced
+                      first.
+--photos              Sync photos (only photos, no photosets sync action is
+                      run).
+--update_photos       Update photos when updating a photoset.
+--update_tags         Update tags when updating a photo.
+-t, --test            Test/simulate. Don't write results to db.</pre>
+</div>
+<p>Note: behavior soon to be changed (in 0.3.x releases) to simplify.</p>
+</div>
+<div class="section" id="download-photos">
+<h2>Download photos<a class="headerlink" href="#download-photos" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><pre>./manage.py flickr_download [options]</pre>
+</div>
+<div class="highlight-python"><pre>-u USER_ID, --user=USER_ID
+                      Sync for a particular user. Default is 1 (in most
+                      cases it's the admin and you're using it only for
+                      yourself).
+-a, --all             By default downloads only photos which have not been
+                      downloaded (default behavior). Use this option to
+                      (re)download all.
+-p, --public          Only public photos.
+-l, --large           Large instead of original (f.ex. for accounts with no
+                      access to original).
+-r, --reset           Clear downloads db table. Does not affect your files.</pre>
+</div>
+<p>Photos are downloaded under your MEDIA folder. Default settings you can override:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># default settings</span>
+<span class="n">FLICKR_DOWNLOAD_DIRBASE</span> <span class="o">=</span> <span class="s">&#39;flickr&#39;</span> <span class="c"># under MEDIA_ROOT</span>
+<span class="n">FLICKR_DOWNLOAD_DIRFORMAT</span> <span class="o">=</span> <span class="s">&#39;%Y/%Y-%m&#39;</span> <span class="c"># Photo.date_posted</span>
+<span class="c"># photos with date_posted January 2009 will land in /media/flickr/2009/2009-01/</span>
+
+<span class="c"># example custom settings</span>
+<span class="n">FLICKR_DOWNLOAD_DIRBASE</span> <span class="o">=</span> <span class="s">&#39;downloads&#39;</span>
+<span class="n">FLICKR_DOWNLOAD_DIRFORMAT</span> <span class="o">=</span> <span class="s">&#39;%Y/%m/</span><span class="si">%d</span><span class="s">&#39;</span>
+<span class="c"># photos with date_posted 23 January 2009 will land in /media/downloads/2009/01/23/ etc.</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Management Commands</a><ul>
+<li><a class="reference internal" href="#sync-photos-database">Sync photos database</a></li>
+<li><a class="reference internal" href="#download-photos">Download photos</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="usage-intro.html"
+                        title="previous chapter">Introduction</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="usage-models.html"
+                        title="next chapter">Models</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/usage-commands.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="usage-models.html" title="Models"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="usage-intro.html" title="Introduction"
+             >previous</a> |</li>
+        <li><a href="index.html">django-flickr 0.2.4 documentation</a> &raquo;</li>
+          <li><a href="usage.html" >Usage</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Jakub Zalewski.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
