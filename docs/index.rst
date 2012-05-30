@@ -6,8 +6,6 @@
 Django-Flickr 
 =============
 
-.. image:: _static/django-flickr-logo.png 
-
 `Django-Flickr
 <https://bitbucket.org/zalew/django-flickr/>`_ provides a mechanism to mirror user's Flickr photos
 into a Django project.
