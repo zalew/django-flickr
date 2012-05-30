@@ -116,3 +116,31 @@ class FlickrModelTests(TestCase):
         self.assertEqual(photo.medium_source, photo.medium.source)
         self.assertEqual(photo.large_source, photo.large.source)
         self.assertEqual(photo.ori_source, photo.ori.source)
+
+    def test_dynamic_sizes_dbhits(self):
+        from django.conf import settings
+        try:
+            from django.db import connection
+            settings.DEBUG = True
+            photo = Photo.objects.create_from_json(flickr_user=self.flickr_user, info=json_info, sizes=json_sizes, exif=json_exif)
+            connection.queries = []
+            photo = Photo.objects.get(id = photo.id)
+            print len(connection.queries)
+            print "!"*20
+            photo.large.source
+            print len(connection.queries)
+            photo.large.source
+            print len(connection.queries)
+            photo.large.source
+            print len(connection.queries)
+            photo.large.source
+            print len(connection.queries)
+            photo.small.source
+            print len(connection.queries)
+            photo.small.width
+            print len(connection.queries)
+            photo.thumb.url
+            print len(connection.queries)
+
+        finally:
+            settings.DEBUG = False

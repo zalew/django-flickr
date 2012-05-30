@@ -75,6 +75,7 @@ FLICKR_PHOTO_SIZES = {
     'Original' : {  'label' : 'ori',
                     'suffix' : 'o',
                     'secret_field' : 'originalsecret',
+                    'format_field' : 'originalformat',
                 },
     }
 
@@ -83,16 +84,13 @@ def get_size_from_label(label):
         if label == size_item.get('label', None):
             return size_item
 
-def build_photo_source(farm_id, server_id, photo_id, secret, size, format='jpg'):
-    size_suffix = ''
-    if size.get('suffix', False):
-        size_suffix = '_%s' % size['suffix']
+def build_photo_source(farm_id, server_id, photo_id, secret, size_suffix = None, format='jpg'):
     return FLICKR_PHOTO_SOURCE % {
                                 'farm-id':farm_id,
                                 'server-id':server_id,
                                 'photo-id':photo_id,
                                 'secret':secret,
-                                'size_suffix':size_suffix,
+                                'size_suffix': '' if not size_suffix else '_%s' % size_suffix,
                                 'format':format,
                                 }
 
