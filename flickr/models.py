@@ -11,7 +11,7 @@ from taggit.managers import TaggableManager
 from flickr.flickr_spec import FLICKR_PHOTO_SIZES, FLICKR_PHOTO_URL_PAGE_SIZES, build_photo_source
 from flickr.utils import ts_to_dt, unslash
 
-URL_BASE = getattr(settings, 'FLICKR_URL_BASE', 'http://flickr.com/')
+URL_BASE = getattr(settings, 'FLICKR_URL_BASE', 'http://www.flickr.com/')
 
 
 class FlickrUserManager(models.Manager):
@@ -375,96 +375,107 @@ class PhotoSizeData(models.Model):
 def attrproperty(getter_function):
     class _Object(object):
         def __init__(self, obj):
-            print "-"
             self.obj = obj
         def __getattr__(self, attr):
             return getter_function(self.obj, attr)
     return property(_Object)
 
 class PhotoSize(object):
-    def __init__(self, photo, size):
+    _source = None
+    _url = None
+
+    label = None
+    secret_field = None
+    format_field = None
+    source_suffix = None
+    url_suffix = None
+
+    object = None
+
+    def __init__(self, photo, **kwargs):
         self.photo = photo
-        self.size = size
-        self.label = size['label']
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
 
-        self.object = self._get_object()
-
-        secret_field = size.get('secret_field', 'secret')
-        self.secret = getattr(self.photo, secret_field) if secret_field != '' else ''
-        self.format = 'jpg' if self.label != 'ori' else self.photo.originalformat
+        self.secret = getattr(self.photo, self.secret_field)
+        self.format = 'jpg' if not self.format_field else getattr(self.photo, self.format_field)
 
     @classmethod
     def as_property(cls, size):
-        label = size['label']
+        data_dict = {   'label' : size['label'],
+                        'secret_field' : size.get('secret_field', 'secret'),
+                        'format_field' : size.get('format_field', None),
+                        'source_suffix' : size.get('source_suffix', None),
+                        'url_suffix' : size.get('url_suffix', None),
+                    }
         def func(self, attr):
-            obj = getattr(self, '_%s'%label, None)
+            obj = getattr(self, '_%s' % data_dict['label'], None)
             if not obj:
-                obj = PhotoSize(self, size)
-                setattr(self, '_%s'%label, obj)
-            print attr
+                obj = PhotoSize(self, **data_dict)
+                setattr(self, '_%s' % data_dict['label'], obj)
             return getattr(obj, attr)
         return func
 
     def _get_object(self):
-        try:
-            print "*"
-            return self.photo.sizes.filter(size=self.label).get()
-        except:
-            return None
+        if not self.object:
+            self.object = self.photo.sizes.filter(size=self.label).get()
+        return self.object
 
     def _get_source(self):
-        source = None
-        if self.object:
-            source = self.object.source
-        if not source:
-            source = build_photo_source(self.photo.farm, self.photo.server, self.photo.flickr_id, self.secret, self.size, self.format)
-        return source
+        if not self._source:
+            if self.object:
+                self._source = self.object.source
+            if not self._source:
+                self._source = build_photo_source(self.photo.farm, self.photo.server, self.photo.flickr_id, self.secret, self.source_suffix, self.format)
+        return self._source
     source = property(_get_source)
 
     def _get_url(self):
-        url = None
-        if self.object:
-            url = self.object.url
-        if not url:
-            url = FLICKR_PHOTO_URL_PAGE_SIZES % { 'user-id' : self.photo.user.nsid, 'photo-id' : self.photo.flickr_id, 'size-suffix' : self.size['suffix'] }
-        return url
+        if not self._url:
+            if self.object:
+                self._url = self.object.url
+            if not self._url:
+                self._url = '%s%s/sizes/%s/' % ( self.photo.user.flickr_page_url, self.photo.flickr_id, self.url_suffix)
+        return self._url
     url = property(_get_url)
 
     @property
     def width(self):
-        width = None
         if self.object:
-            width = self.object.width
-        return width
+            return self.object.width
+        return None
 
     @property
     def height(self):
-        height = None
         if self.object:
-            height = self.object.height
-        return height
+            return self.object.height
+        return None
 
 for key,size in FLICKR_PHOTO_SIZES.items():
     label = size.get('label', None)
     setattr(Photo, label, attrproperty(PhotoSize.as_property(size=size)))
     """ Deprecation warning """
     for dato in ['source', 'url', 'width', 'height']:
+        method_deprecated = 'photo.%s_%s'%(label, dato)
+        method_suggested = 'photo.%s.%s'%(label, dato)
         def get_property(self, label=label, dato=dato):
+            from warnings import warn
+            string = "Accessing photo sizes properties through '%s' is deprecated. Use '%s' instead." % (method_deprecated, method_suggested)
+            warn(string)
             return getattr(getattr(self, label), dato)
         def set_property(self, value, label=label, dato=dato):
             """
                 We cannot do it this way because we don't already have
                 a photo.id (not saved) and, if we save it, we get an
                 exception when finishing creating call in PhotoManager::create_from_json
+
+                if not self.id:
+                    self.save()
+                size_data, created = PhotoSizeData.objects.get_or_create(photo = self, size=label)
+                size_data.dato = value
+                size_data.save()
             """
-            return
-            if not self.id:
-                self.save()
-            size_data, created = PhotoSizeData.objects.get_or_create(photo = self, size=label)
-            print size_data
-            size_data.dato = value
-            size_data.save()
-            print size_data
+            raise NotImplementedError
         setattr(Photo, '%s_%s'%(label, dato), property(get_property, set_property))
 
 
