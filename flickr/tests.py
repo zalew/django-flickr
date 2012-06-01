@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # encoding: utf-8
+from bunch import bunchify
 from datetime import datetime
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
 from flickr.models import FlickrUser, Photo, PhotoSet, Collection
+from flickr.flickr_spec import FLICKR_PHOTO_SIZES
+from flickr.utils import unslash
 from flickr.tests_data import json_user, json_info, json_sizes, json_exif, \
     json_set_info, json_set_photos, json_collection_tree_user
 
@@ -34,6 +37,9 @@ class FlickrModelTests(TestCase):
         self.assertEqual(fu.profileurl, json_user['person']['profileurl']['_content'].replace('\\/', '/'))
 
     def test_photo_create(self):
+        FlickrUser.objects.update_from_json(self.flickr_user.id, json_user)
+        self.flickr_user = FlickrUser.objects.get(flickr_id=json_user['person']['id'])
+
         photo = Photo.objects.create_from_json(flickr_user=self.flickr_user, info=json_info, sizes=json_sizes, exif=json_exif)
         self.assertEqual(photo.flickr_id, json_info['photo']['id'])
         self.assertEqual(photo.title, json_info['photo']['title']['_content'])
@@ -94,3 +100,37 @@ class FlickrModelTests(TestCase):
         self.assertEqual(cols.count(), 9)
         cols = Collection.objects.filter(user=self.flickr_user).exclude(parent=None)
         self.assertEqual(cols.count(), 6)
+
+    def test_dynamic_sizes(self):
+        FlickrUser.objects.update_from_json(self.flickr_user.id, json_user)
+        self.flickr_user = FlickrUser.objects.get(flickr_id=json_user['person']['id'])
+        photo = Photo.objects.create_from_json(flickr_user=self.flickr_user, info=json_info, sizes=None, exif=json_exif)
+        size_bunch = bunchify(json_sizes['sizes']['size'])
+        for size in size_bunch:
+            self.assertEqual(unslash(size.source), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).source)
+            self.assertEqual(unslash(size.url), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).url)
+        Photo.objects.update_from_json(flickr_id=photo.flickr_id, info=json_info, sizes=json_sizes, exif=json_exif)
+        photo = Photo.objects.get(flickr_id=photo.flickr_id)
+        self.assertEqual(photo.square_source, photo.square.source)
+        self.assertEqual(photo.thumb_source, photo.thumb.source)
+        self.assertEqual(photo.small_source, photo.small.source)
+        self.assertEqual(photo.medium_source, photo.medium.source)
+        self.assertEqual(photo.large_source, photo.large.source)
+        self.assertEqual(photo.ori_source, photo.ori.source)
+    def test_dynamic_sizes_dbhits(self):
+        FlickrUser.objects.update_from_json(self.flickr_user.id, json_user)
+        self.flickr_user = FlickrUser.objects.get(flickr_id=json_user['person']['id'])
+        photo = Photo.objects.create_from_json(flickr_user=self.flickr_user, info=json_info, sizes=None, exif=json_exif)
+        photo = Photo.objects.get(flickr_id=photo.flickr_id)
+        with self.assertNumQueries(1):
+            size_bunch = bunchify(json_sizes['sizes']['size'])
+            for size in size_bunch:
+                self.assertEqual(unslash(size.source), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).source)
+                self.assertEqual(unslash(size.url), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).url)
+        Photo.objects.update_from_json(flickr_id=photo.flickr_id, info=json_info, sizes=json_sizes, exif=json_exif)
+        photo = Photo.objects.get(flickr_id=photo.flickr_id)
+        with self.assertNumQueries(1):
+            size_bunch = bunchify(json_sizes['sizes']['size'])
+            for size in size_bunch:
+                self.assertEqual(unslash(size.source), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).source)
+                self.assertEqual(unslash(size.url), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).url)

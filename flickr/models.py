@@ -8,17 +8,12 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.timezone import now
 from taggit.managers import TaggableManager
+from flickr.flickr_spec import FLICKR_PHOTO_SIZES, FLICKR_PHOTO_URL_PAGE_SIZES, build_photo_source
+from flickr.utils import ts_to_dt, unslash
+
+URL_BASE = getattr(settings, 'FLICKR_URL_BASE', 'http://www.flickr.com/')
 
 
-URL_BASE = getattr(settings, 'FLICKR_URL_BASE', 'http://flickr.com/')
-
-
-def ts_to_dt(timestamp):
-    return datetime.fromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
-
-
-def unslash(url):
-    return url.replace('\\/', '/')
 
 
 class FlickrUserManager(models.Manager):
@@ -105,6 +100,7 @@ class BigIntegerField(models.IntegerField):
 
 
 class PhotoManager(models.Manager):
+    allowed_sizes = ['Square', 'Thumbnail', 'Small', 'Medium 640', 'Large', 'Original',]
 
     def visible(self, *args, **kwargs):
         return self.get_query_set().filter(show=True).filter(*args, **kwargs)
@@ -112,12 +108,12 @@ class PhotoManager(models.Manager):
     def public(self, *args, **kwargs):
         return self.visible(ispublic=1, *args, **kwargs)
 
-    def _prepare_data(self, info, sizes, flickr_user=None, exif=None, geo=None):
+    def _prepare_data(self, info, flickr_user=None, exif=None, geo=None):
         photo = bunchify(info['photo'])
-        size_json = bunchify(sizes['sizes']['size'])
         photo_data = {
                   'flickr_id': photo.id, 'server': photo.server,
                   'secret': photo.secret, 'originalsecret': getattr(photo, 'originalsecret', ''), 'farm': photo.farm,
+                  'originalformat' : getattr(photo, 'originalformat', ''),
                   'title': photo.title._content, 'description': photo.description._content, 'date_taken': photo.dates.taken,
                   'date_posted': ts_to_dt(photo.dates.posted), 'date_updated': ts_to_dt(photo.dates.lastupdate),
                   'date_taken_granularity': photo.dates.takengranularity,
@@ -128,14 +124,6 @@ class PhotoManager(models.Manager):
                   }
         if flickr_user:
             photo_data['user'] = flickr_user
-        size_label_conv = {'Square': 'square', 'Thumbnail': 'thumb', 'Small': 'small', 'Medium 640': 'medium', 'Large': 'large', 'Original': 'ori', }
-        for size in size_json:
-            if size.label in size_label_conv.keys():
-                label = size_label_conv[size.label]
-                photo_data = dict(photo_data.items() + {
-                                label + '_width': size.width, label + '_height': size.height,
-                                label + '_source': size.source, label + '_url': unslash(size.url),
-                                }.items())
         for url in photo.urls.url:
             if url.type == 'photopage':
                 photo_data['url_page'] = unslash(url._content)
@@ -168,26 +156,36 @@ class PhotoManager(models.Manager):
         except KeyError:
             pass
 
-    def create_from_json(self, flickr_user, info, sizes, exif=None, geo=None, **kwargs):
+    def _add_sizes(self, obj, sizes, override=False):
+        for size in sizes['sizes']['size']:
+            obj.sizes.create_from_json(photo=obj, size=size)
+
+    def create_from_json(self, flickr_user, info, sizes=None, exif=None, geo=None, **kwargs):
         """Create a record for flickr_user"""
-        photo_data = self._prepare_data(flickr_user=flickr_user, info=info, sizes=sizes, exif=exif, geo=geo, **kwargs)
+        photo_data = self._prepare_data(flickr_user=flickr_user, info=info, exif=exif, geo=geo, **kwargs)
         tags = photo_data.pop('tags')
         obj = self.create(**dict(photo_data.items() + kwargs.items()))
         self._add_tags(obj, tags)
+        if sizes:
+            self._add_sizes(obj, sizes)
         return obj
 
-    def update_from_json(self, flickr_id, info, sizes, exif=None, geo=None, update_tags=False, **kwargs):
+    def update_from_json(self, flickr_id, info, sizes=None, exif=None, geo=None, update_tags=False, update_sizes=False, **kwargs):
         """Update a record with flickr_id"""
-        photo_data = self._prepare_data(info=info, sizes=sizes, exif=exif, geo=geo, **kwargs)
+        photo_data = self._prepare_data(info=info, exif=exif, geo=geo, **kwargs)
         tags = photo_data.pop('tags')
         result = self.filter(flickr_id=flickr_id).update(**dict(photo_data.items() + kwargs.items()))
-        if result == 1 and update_tags:
+        if result == 1:
             obj = self.get(flickr_id=flickr_id)
-            obj.tags.clear()
-            self._add_tags(obj, tags)
+            if update_tags:
+                obj.tags.clear()
+                self._add_tags(obj, tags)
+            if update_sizes:
+                obj.sizes.clear()
+                self._add_sizes(obj, sizes)
         return result
 
-    def create_or_update_from_json(self, flickr_user, info, sizes, exif=None, geo=None, **kwargs):
+    def create_or_update_from_json(self, flickr_user, info, sizes=None, exif=None, geo=None, **kwargs):
         """Pretty self explanatory"""
 
 
@@ -198,7 +196,8 @@ class Photo(FlickrModel):
     server = models.PositiveSmallIntegerField()
     farm = models.PositiveSmallIntegerField()
     secret = models.CharField(max_length=10)
-    originalsecret = models.CharField(max_length=10)
+    originalsecret = models.CharField(max_length=10, null=True, blank=True)
+    originalformat = models.CharField(max_length=4, null=True, blank=True)
 
     title = models.CharField(max_length=255, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
@@ -212,38 +211,6 @@ class Photo(FlickrModel):
     tags = TaggableManager(blank=True)
 
     slug = models.SlugField(max_length=255, null=True, blank=True)
-
-    """http://www.flickr.com/services/api/explore/flickr.photos.getSizes"""
-
-    square_width = models.PositiveIntegerField(null=True, blank=True)
-    square_height = models.PositiveIntegerField(null=True, blank=True)
-    square_source = models.URLField(max_length=255, null=True, blank=True)
-    square_url = models.URLField(max_length=255, null=True, blank=True)
-
-    thumb_width = models.PositiveIntegerField(null=True, blank=True)
-    thumb_height = models.PositiveIntegerField(null=True, blank=True)
-    thumb_source = models.URLField(max_length=255, null=True, blank=True)
-    thumb_url = models.URLField(max_length=255, null=True, blank=True)
-
-    small_width = models.PositiveIntegerField(null=True, blank=True)
-    small_height = models.PositiveIntegerField(null=True, blank=True)
-    small_source = models.URLField(max_length=255, null=True, blank=True)
-    small_url = models.URLField(max_length=255, null=True, blank=True)
-
-    medium_width = models.PositiveIntegerField(null=True, blank=True)
-    medium_height = models.PositiveIntegerField(null=True, blank=True)
-    medium_source = models.URLField(max_length=255, null=True, blank=True)
-    medium_url = models.URLField(max_length=255, null=True, blank=True)
-
-    large_width = models.PositiveIntegerField(null=True, blank=True)
-    large_height = models.PositiveIntegerField(null=True, blank=True)
-    large_source = models.URLField(max_length=255, null=True, blank=True)
-    large_url = models.URLField(max_length=255, null=True, blank=True)
-
-    ori_width = models.PositiveIntegerField(null=True, blank=True)
-    ori_height = models.PositiveIntegerField(null=True, blank=True)
-    ori_source = models.URLField(max_length=255, null=True, blank=True)
-    ori_url = models.URLField(max_length=255, null=True, blank=True)
 
     """http://www.flickr.com/services/api/explore/flickr.photos.getExif
     Lots of data varying type and values, let's just put'em (json string in exif) there and we'll think later."""
@@ -352,6 +319,153 @@ class Photo(FlickrModel):
                 pass
             setattr(self, '_previous_in_ps%s' % photoset.flickr_id, photo)
         return getattr(self, '_previous_in_ps%s' % photoset.flickr_id)
+
+
+class PhotoSizeDataManager(models.Manager):
+    def _prepare_data(self, size, photo=None, **kwargs):
+        size_data = bunchify(size)
+        data = {    'size' : FLICKR_PHOTO_SIZES[size_data.label]['label'],
+                    'width': size_data.width,
+                    'height' : size_data.height,
+                    'source' : size_data.source,
+                    'url' : unslash(size_data.url),
+                  }
+        if photo:
+            data['photo'] = photo
+        return data
+
+    def create_from_json(self, photo, size, **kwargs):
+        """Create a record for photo size data"""
+        photosize_data = self._prepare_data(photo=photo, size = size, **kwargs)
+        obj = self.create(**dict(photosize_data.items() + kwargs.items() ))
+        return obj
+
+    def update_from_json(self, photosize_id, size, **kwargs):
+        photosize_data = self._prepare_data(size = size, **kwargs)
+        result = self.filter(id = photosize_id).update(**dict(photosize_data.items()) + kwargs.items() )
+        return result
+
+class PhotoSizeData(models.Model):
+    photo = models.ForeignKey(Photo, related_name='sizes')
+    size = models.CharField(max_length = 10, choices = [(v['label'], k) for k,v in FLICKR_PHOTO_SIZES.iteritems()])
+    width = models.PositiveIntegerField(null=True, blank=True)
+    height = models.PositiveIntegerField(null=True, blank=True)
+    source = models.URLField(null=True, blank=True)
+    url = models.URLField(null=True, blank=True)
+
+    objects = PhotoSizeDataManager()
+
+    class Meta:
+        unique_together = (('photo', 'size'), )
+
+
+""" Dynamic addition of properties to access photo sizes information (stored in photo model fields) """
+def attrproperty(getter_function):
+    class _Object(object):
+        def __init__(self, obj):
+            self.obj = obj
+        def __getattr__(self, attr):
+            return getter_function(self.obj, attr)
+    return property(_Object)
+
+class PhotoSize(object):
+    _source = None
+    _url = None
+
+    label = None
+    secret_field = None
+    format_field = None
+    source_suffix = None
+    url_suffix = None
+
+    object = None
+
+    def __init__(self, photo, **kwargs):
+        self.photo = photo
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+
+        self.secret = getattr(self.photo, self.secret_field)
+        self.format = 'jpg' if not self.format_field else getattr(self.photo, self.format_field)
+
+    @classmethod
+    def as_property(cls, size):
+        data_dict = {   'label' : size['label'],
+                        'secret_field' : size.get('secret_field', 'secret'),
+                        'format_field' : size.get('format_field', None),
+                        'source_suffix' : size.get('source_suffix', None),
+                        'url_suffix' : size.get('url_suffix', None),
+                    }
+        def func(self, attr):
+            obj = getattr(self, '_%s' % data_dict['label'], None)
+            if not obj:
+                obj = PhotoSize(self, **data_dict)
+                setattr(self, '_%s' % data_dict['label'], obj)
+            return getattr(obj, attr)
+        return func
+
+    def _get_object(self):
+        if not self.object:
+            self.object = self.photo.sizes.filter(size=self.label).get()
+        return self.object
+
+    def _get_source(self):
+        if not self._source:
+            if self.object:
+                self._source = self.object.source
+            if not self._source:
+                self._source = build_photo_source(self.photo.farm, self.photo.server, self.photo.flickr_id, self.secret, self.source_suffix, self.format)
+        return self._source
+    source = property(_get_source)
+
+    def _get_url(self):
+        if not self._url:
+            if self.object:
+                self._url = self.object.url
+            if not self._url:
+                self._url = '%s%s/sizes/%s/' % ( self.photo.user.flickr_page_url, self.photo.flickr_id, self.url_suffix)
+        return self._url
+    url = property(_get_url)
+
+    @property
+    def width(self):
+        if self.object:
+            return self.object.width
+        return None
+
+    @property
+    def height(self):
+        if self.object:
+            return self.object.height
+        return None
+
+for key,size in FLICKR_PHOTO_SIZES.items():
+    label = size.get('label', None)
+    setattr(Photo, label, attrproperty(PhotoSize.as_property(size=size)))
+    """ Deprecation warning """
+    for dato in ['source', 'url', 'width', 'height']:
+        method_deprecated = 'photo.%s_%s'%(label, dato)
+        method_suggested = 'photo.%s.%s'%(label, dato)
+        def get_property(self, label=label, dato=dato):
+            from warnings import warn
+            string = "Accessing photo sizes properties through '%s' is deprecated. Use '%s' instead." % (method_deprecated, method_suggested)
+            warn(string)
+            return getattr(getattr(self, label), dato)
+        def set_property(self, value, label=label, dato=dato):
+            """
+                We cannot do it this way because we don't already have
+                a photo.id (not saved) and, if we save it, we get an
+                exception when finishing creating call in PhotoManager::create_from_json
+
+                if not self.id:
+                    self.save()
+                size_data, created = PhotoSizeData.objects.get_or_create(photo = self, size=label)
+                size_data.dato = value
+                size_data.save()
+            """
+            raise NotImplementedError
+        setattr(Photo, '%s_%s'%(label, dato), property(get_property, set_property))
+
 
 
 class PhotoSetManager(models.Manager):
