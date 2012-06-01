@@ -108,7 +108,7 @@ class PhotoManager(models.Manager):
     def public(self, *args, **kwargs):
         return self.visible(ispublic=1, *args, **kwargs)
 
-    def _prepare_data(self, info, sizes, flickr_user=None, exif=None, geo=None):
+    def _prepare_data(self, info, flickr_user=None, exif=None, geo=None):
         photo = bunchify(info['photo'])
         photo_data = {
                   'flickr_id': photo.id, 'server': photo.server,
@@ -124,15 +124,6 @@ class PhotoManager(models.Manager):
                   }
         if flickr_user:
             photo_data['user'] = flickr_user
-        if sizes:
-            size_json = bunchify(sizes['sizes']['size'])
-            for size in size_json:
-                if size.label in self.allowed_sizes and size.label in FLICKR_PHOTO_SIZES.keys():
-                    label = FLICKR_PHOTO_SIZES[size.label]['label']
-                    photo_data = dict(photo_data.items() + {
-                                    label+'_width': size.width, label+'_height': size.height,
-                                    label+'_source': size.source, label+'_url': unslash(size.url),
-                                    }.items())
         for url in photo.urls.url:
             if url.type == 'photopage':
                 photo_data['url_page'] = unslash(url._content)
@@ -164,22 +155,20 @@ class PhotoManager(models.Manager):
         for size in sizes['sizes']['size']:
             obj.sizes.create_from_json(photo=obj, size=size)
 
-    def create_from_json(self, flickr_user, info, sizes, exif=None, geo=None, **kwargs):
+    def create_from_json(self, flickr_user, info, sizes=None, exif=None, geo=None, **kwargs):
         """Create a record for flickr_user"""
-        photo_data = self._prepare_data(flickr_user=flickr_user, info=info, sizes=None, exif=exif, geo=geo, **kwargs)
+        photo_data = self._prepare_data(flickr_user=flickr_user, info=info, exif=exif, geo=geo, **kwargs)
         tags = photo_data.pop('tags')
-        #sizes = photo_data.pop('sizes')
         obj = self.create(**dict(photo_data.items() + kwargs.items()))
         self._add_tags(obj, tags)
         if sizes:
             self._add_sizes(obj, sizes)
         return obj
 
-    def update_from_json(self, flickr_id, info, sizes, exif=None, geo=None, update_tags=False, update_sizes=False, **kwargs):
+    def update_from_json(self, flickr_id, info, sizes=None, exif=None, geo=None, update_tags=False, update_sizes=False, **kwargs):
         """Update a record with flickr_id"""
-        photo_data = self._prepare_data(info=info, sizes=None, exif=exif, geo=geo, **kwargs)
+        photo_data = self._prepare_data(info=info, exif=exif, geo=geo, **kwargs)
         tags = photo_data.pop('tags')
-        #sizes = photo_data.pop('sizes')
         result = self.filter(flickr_id=flickr_id).update(**dict(photo_data.items() + kwargs.items()))
         if result == 1:
             obj = self.get(flickr_id=flickr_id)
@@ -191,7 +180,7 @@ class PhotoManager(models.Manager):
                 self._add_sizes(obj, sizes)
         return result
 
-    def create_or_update_from_json(self, flickr_user, info, sizes, exif=None, geo=None, **kwargs):
+    def create_or_update_from_json(self, flickr_user, info, sizes=None, exif=None, geo=None, **kwargs):
         """Pretty self explanatory"""
 
 
