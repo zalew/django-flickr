@@ -1,19 +1,16 @@
 #!/usr/bin/env python
 # encoding: utf-8
 from bunch import bunchify  # #for json.dot.notation instead of json['annoying']['dict']
-from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.timezone import now
 from taggit.managers import TaggableManager
-from flickr.flickr_spec import FLICKR_PHOTO_SIZES, FLICKR_PHOTO_URL_PAGE_SIZES, build_photo_source
+from flickr.flickr_spec import FLICKR_PHOTO_SIZES, build_photo_source
 from flickr.utils import ts_to_dt, unslash
 
 URL_BASE = getattr(settings, 'FLICKR_URL_BASE', 'http://www.flickr.com/')
-
-
 
 
 class FlickrUserManager(models.Manager):
@@ -105,7 +102,7 @@ class BigIntegerField(models.IntegerField):
 
 class PhotoManager(models.Manager):
 
-    allowed_sizes = ['Square', 'Thumbnail', 'Small', 'Medium 640', 'Large', 'Original',]
+    allowed_sizes = ['Square', 'Thumbnail', 'Small', 'Medium 640', 'Large', 'Original', ]
 
     def visible(self, *args, **kwargs):
         return self.get_query_set().filter(show=True).filter(*args, **kwargs)
@@ -135,8 +132,8 @@ class PhotoManager(models.Manager):
                 if size.label in self.allowed_sizes and size.label in FLICKR_PHOTO_SIZES.keys():
                     label = FLICKR_PHOTO_SIZES[size.label]['label']
                     photo_data = dict(photo_data.items() + {
-                                    label+'_width': size.width, label+'_height': size.height,
-                                    label+'_source': size.source, label+'_url': unslash(size.url),
+                                    label + '_width': size.width, label + '_height': size.height,
+                                    label + '_source': size.source, label + '_url': unslash(size.url),
                                     }.items())
         for url in photo.urls.url:
             if url.type == 'photopage':
@@ -162,13 +159,13 @@ class PhotoManager(models.Manager):
                 pass
         return photo_data
 
-    def _add_tags(self, obj, tags, override=False):
+    def _add_tags(self, obj, tags):
         try:
             obj.tags.set(*[tag for tag in tags.split()])
         except KeyError:
             pass
 
-    def _add_sizes(self, obj, sizes, override=False):
+    def _add_sizes(self, obj, sizes):
         for size in sizes['sizes']['size']:
             obj.sizes.create_from_json(photo=obj, size=size)
 
@@ -182,17 +179,17 @@ class PhotoManager(models.Manager):
             self._add_sizes(obj, sizes)
         return obj
 
-    def update_from_json(self, flickr_id, info, sizes=None, exif=None, update_tags=False, **kwargs):
+    def update_from_json(self, flickr_id, info, sizes=None, exif=None, **kwargs):
         """Update a record with flickr_id"""
         photo_data = self._prepare_data(info=info, sizes=sizes, exif=exif, **kwargs)
         tags = photo_data.pop('tags')
         result = self.filter(flickr_id=flickr_id).update(**dict(photo_data.items() + kwargs.items()))
         if result == 1:
             obj = self.get(flickr_id=flickr_id)
-            if update_tags:
+            if kwargs.get('update_tags', False):
                 obj.tags.clear()
                 self._add_tags(obj, tags)
-            if update_sizes:
+            if kwargs.get('update_sizes', False):
                 obj.sizes.clear()
                 self._add_sizes(obj, sizes)
         return result
@@ -336,30 +333,31 @@ class Photo(FlickrModel):
 class PhotoSizeDataManager(models.Manager):
     def _prepare_data(self, size, photo=None, **kwargs):
         size_data = bunchify(size)
-        data = {    'size' : FLICKR_PHOTO_SIZES[size_data.label]['label'],
-                    'width': size_data.width,
-                    'height' : size_data.height,
-                    'source' : size_data.source,
-                    'url' : unslash(size_data.url),
-                  }
+        data = {'size': FLICKR_PHOTO_SIZES[size_data.label]['label'],
+                'width': size_data.width,
+                'height': size_data.height,
+                'source': size_data.source,
+                'url': unslash(size_data.url),
+              }
         if photo:
             data['photo'] = photo
         return data
 
     def create_from_json(self, photo, size, **kwargs):
         """Create a record for photo size data"""
-        photosize_data = self._prepare_data(photo=photo, size = size, **kwargs)
-        obj = self.create(**dict(photosize_data.items() + kwargs.items() ))
+        photosize_data = self._prepare_data(photo=photo, size=size, **kwargs)
+        obj = self.create(**dict(photosize_data.items() + kwargs.items()))
         return obj
 
     def update_from_json(self, photosize_id, size, **kwargs):
-        photosize_data = self._prepare_data(size = size, **kwargs)
-        result = self.filter(id = photosize_id).update(**dict(photosize_data.items()) + kwargs.items() )
+        photosize_data = self._prepare_data(size=size, **kwargs)
+        result = self.filter(id=photosize_id).update(**dict(photosize_data.items()) + kwargs.items())
         return result
+
 
 class PhotoSizeData(models.Model):
     photo = models.ForeignKey(Photo, related_name='sizes')
-    size = models.CharField(max_length = 10, choices = [(v['label'], k) for k,v in FLICKR_PHOTO_SIZES.iteritems()])
+    size = models.CharField(max_length=10, choices=[(v['label'], k) for k, v in FLICKR_PHOTO_SIZES.iteritems()])
     width = models.PositiveIntegerField(null=True, blank=True)
     height = models.PositiveIntegerField(null=True, blank=True)
     source = models.URLField(null=True, blank=True)
@@ -368,17 +366,22 @@ class PhotoSizeData(models.Model):
     objects = PhotoSizeDataManager()
 
     class Meta:
-        unique_together = (('photo', 'size'), )
+        unique_together = (('photo', 'size'),)
 
 
 """ Dynamic addition of properties to access photo sizes information (stored in photo model fields) """
+
+
 def attrproperty(getter_function):
     class _Object(object):
+
         def __init__(self, obj):
             self.obj = obj
+
         def __getattr__(self, attr):
             return getter_function(self.obj, attr)
     return property(_Object)
+
 
 class PhotoSize(object):
     _source = None
@@ -402,12 +405,13 @@ class PhotoSize(object):
 
     @classmethod
     def as_property(cls, size):
-        data_dict = {   'label' : size['label'],
-                        'secret_field' : size.get('secret_field', 'secret'),
-                        'format_field' : size.get('format_field', None),
-                        'source_suffix' : size.get('source_suffix', None),
-                        'url_suffix' : size.get('url_suffix', None),
+        data_dict = {'label': size['label'],
+                    'secret_field': size.get('secret_field', 'secret'),
+                    'format_field': size.get('format_field', None),
+                    'source_suffix': size.get('source_suffix', None),
+                    'url_suffix': size.get('url_suffix', None),
                     }
+
         def func(self, attr):
             obj = getattr(self, '_%s' % data_dict['label'], None)
             if not obj:
@@ -435,7 +439,7 @@ class PhotoSize(object):
             if self.object:
                 self._url = self.object.url
             if not self._url:
-                self._url = '%s%s/sizes/%s/' % ( self.photo.user.flickr_page_url, self.photo.flickr_id, self.url_suffix)
+                self._url = '%s%s/sizes/%s/' % (self.photo.user.flickr_page_url, self.photo.flickr_id, self.url_suffix)
         return self._url
     url = property(_get_url)
 
@@ -451,18 +455,20 @@ class PhotoSize(object):
             return self.object.height
         return None
 
-for key,size in FLICKR_PHOTO_SIZES.items():
+for key, size in FLICKR_PHOTO_SIZES.items():
     label = size.get('label', None)
     setattr(Photo, label, attrproperty(PhotoSize.as_property(size=size)))
     """ Deprecation warning """
     for dato in ['source', 'url', 'width', 'height']:
-        method_deprecated = 'photo.%s_%s'%(label, dato)
-        method_suggested = 'photo.%s.%s'%(label, dato)
+        method_deprecated = 'photo.%s_%s' % (label, dato)
+        method_suggested = 'photo.%s.%s' % (label, dato)
+
         def get_property(self, label=label, dato=dato):
             from warnings import warn
             string = "Accessing photo sizes properties through '%s' is deprecated. Use '%s' instead." % (method_deprecated, method_suggested)
             warn(string)
             return getattr(getattr(self, label), dato)
+
         def set_property(self, value, label=label, dato=dato):
             """
                 We cannot do it this way because we don't already have
@@ -476,7 +482,7 @@ for key,size in FLICKR_PHOTO_SIZES.items():
                 size_data.save()
             """
             raise NotImplementedError
-        setattr(Photo, '%s_%s'%(label, dato), property(get_property, set_property))
+        setattr(Photo, '%s_%s' % (label, dato), property(get_property, set_property))
 
 
 class PhotoSetManager(models.Manager):
@@ -580,7 +586,7 @@ class CollectionManager(models.Manager):
         col = bunchify(info)
         data = {'flickr_id': col.id,
                 'title': col.title, 'description': col.description,
-                'parent': parent, 'last_sync' : now(),
+                'parent': parent, 'last_sync': now(),
                 }
         if flickr_user:
             data['user'] = flickr_user
