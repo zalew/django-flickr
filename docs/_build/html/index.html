@@ -1,0 +1,259 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Django-Flickr &mdash; django-flickr 0.2.4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.2.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/bootstrap.js"></script>
+    <link rel="top" title="django-flickr 0.2.4 documentation" href="#" />
+    <link rel="next" title="Installation" href="install.html" />
+<script type="text/javascript">
+(function () {
+  /**
+   * Patch TOC list.
+   *
+   * Will mutate the underlying span to have a correct ul for nav.
+   *
+   * @param $span: Span containing nested UL's to mutate.
+   * @param minLevel: Starting level for nested lists. (1: global, 2: local).
+   */
+  var patchToc = function ($ul, minLevel) {
+    var findA;
+
+    // Find all a "internal" tags, traversing recursively.
+    findA = function ($elem, level) {
+      var level = level || 0,
+        $items = $elem.find("> li > a.internal, > ul, > li > ul");
+
+      // Iterate everything in order.
+      $items.each(function (index, item) {
+        var $item = $(item),
+          tag = item.tagName.toLowerCase(),
+          pad = 15 + ((level - minLevel) * 10);
+
+        if (tag === 'a' && level >= minLevel) {
+          // Add to existing padding.
+          $item.css('padding-left', pad + "px");
+          console.log(level, $item, 'padding-left', pad + "px");
+        } else if (tag === 'ul') {
+          // Recurse.
+          findA($item, level + 1);
+        }
+      });
+    };
+
+    console.log("HERE");
+    findA($ul);
+  };
+
+  $(document).ready(function () {
+    // Add styling, structure to TOC's.
+    $(".dropdown-menu").each(function () {
+      $(this).find("ul").each(function (index, item){
+        var $item = $(item);
+        $item.addClass('unstyled');
+      });
+      $(this).find("li").each(function () {
+        $(this).parent().append(this);
+      });
+    });
+
+    // Patch in level.
+    patchToc($("ul.globaltoc"), 2);
+    patchToc($("ul.localtoc"), 2);
+
+    // Enable dropdown.
+    $('.dropdown-toggle').dropdown();
+  });
+}());
+</script>
+
+  </head>
+  <body>
+  <div id="navbar" class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container-fluid">
+        <a class="brand" href="#">django-flickr</a>
+        <span class="navbar-text pull-left"><b>0.2.4</b></span>
+          <ul class="nav">
+            <li class="divider-vertical"></li>
+            
+              <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contribute.html">How to contribute</a></li>
+</ul>
+</ul>
+</li>
+              <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"><ul>
+<li><a class="reference internal" href="#">Django-Flickr</a><ul>
+<li><a class="reference internal" href="#project-links">Project links</a></li>
+<li><a class="reference internal" href="#contents">Contents</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#contributors">Contributors</a></li>
+<li><a class="reference internal" href="#bugs">Bugs</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+  <!--<span class="localtoc"><ul>
+<li><a class="reference internal" href="#">Django-Flickr</a><ul>
+<li><a class="reference internal" href="#project-links">Project links</a></li>
+<li><a class="reference internal" href="#contents">Contents</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#contributors">Contributors</a></li>
+<li><a class="reference internal" href="#bugs">Bugs</a></li>
+</ul>
+</li>
+</ul>
+</span>-->
+</li>
+            
+            
+              
+  <li><a href="install.html"
+         title="next chapter">Installation &raquo;</a></li>
+            
+            
+              
+            
+            <li><a href="https://bitbucket.org/zalew/django-flickr/" rel="nofollow" class="bitbucket">OpenSource on Bitbucket</a></li>
+          </ul>
+          
+            
+<form class="navbar-search pull-right" style="margin-bottom:-3px;" action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="container">
+   
+  <div class="section" id="django-flickr">
+<h1>Django-Flickr<a class="headerlink" href="#django-flickr" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="https://bitbucket.org/zalew/django-flickr/">Django-Flickr</a> provides a mechanism to mirror user&#8217;s Flickr photos
+into a Django project.</p>
+<p>This project lets developers use the Flickr API but is not endorsed or certified by Flickr. It is advised to read <a class="reference external" href="https://secure.flickr.com/services/api/tos/">Flickr APIs Terms of Use</a> before building and deploying applications.</p>
+<div class="section" id="project-links">
+<h2>Project links<a class="headerlink" href="#project-links" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p><strong>Source</strong></p>
+<ul class="simple">
+<li>builds: <a class="reference external" href="http://pypi.python.org/pypi/django-flickr/">http://pypi.python.org/pypi/django-flickr/</a></li>
+<li>repository: <a class="reference external" href="https://bitbucket.org/zalew/django-flickr/">https://bitbucket.org/zalew/django-flickr/</a></li>
+</ul>
+<p><strong>Meta</strong></p>
+<ul class="simple">
+<li>docs: <a class="reference external" href="http://readthedocs.org/docs/django-flickr/en/latest/">http://readthedocs.org/docs/django-flickr/en/latest/</a></li>
+<li>bugs, feature requests: <a class="reference external" href="https://bitbucket.org/zalew/django-flickr/issues">https://bitbucket.org/zalew/django-flickr/issues</a></li>
+<li>roadmap, release log: <a class="reference external" href="https://bitbucket.org/zalew/django-flickr/wiki">https://bitbucket.org/zalew/django-flickr/wiki</a></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install.html#using-pip">Using PIP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#from-source">From source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#authenticate-your-flickr-account">Authenticate your Flickr account</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#upgrading">Upgrading</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage-intro.html">Introduction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage-intro.html#how-it-works">How it works</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage-commands.html">Management Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage-commands.html#sync-photos-database">Sync photos database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage-commands.html#download-photos">Download photos</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage-models.html">Models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage-models.html#basics">Basics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage-models.html#photo">Photo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage-models.html#photoset">Photoset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage-models.html#collection">Collection</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage-templates.html">Templates</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage-templates.html#photos">Photos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage-templates.html#photosets">Photosets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage-templates.html#tags">Tags</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage-api.html">Flickr API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contribute.html">How to contribute</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contribute.html#reporting-issues-and-submitting-proposals">Reporting issues and submitting proposals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contribute.html#committing-code">Committing code</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="contributors">
+<h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="http://zalew.net">Jakub Zalewski</a></li>
+<li><a class="reference external" href="https://bitbucket.org/jgsogo/">Javier García - Sogo</a></li>
+</ul>
+</div>
+<div class="section" id="bugs">
+<h2>Bugs<a class="headerlink" href="#bugs" title="Permalink to this headline">¶</a></h2>
+<p>The project is in early stages, expect bugs. Please <a class="reference external" href="https://bitbucket.org/zalew/django-flickr/issues?status=new&amp;status=open">report any issues</a>.</p>
+</div>
+</div>
+
+
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right"><a href="#">Back to top</a></p>
+    <p>
+        &copy; Copyright 2012, Jakub Zalewski.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

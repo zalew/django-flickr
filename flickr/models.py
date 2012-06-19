@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
-from bunch import \
-    bunchify #for json.dot.notation instead of json['annoying']['dict']
+from bunch import bunchify  # #for json.dot.notation instead of json['annoying']['dict']
+from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
@@ -14,6 +14,14 @@ from flickr.utils import ts_to_dt, unslash
 URL_BASE = getattr(settings, 'FLICKR_URL_BASE', 'http://flickr.com/')
 
 
+def ts_to_dt(timestamp):
+    return datetime.fromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+
+
+def unslash(url):
+    return url.replace('\\/', '/')
+
+
 class FlickrUserManager(models.Manager):
 
     def update_from_json(self, pk, info, **kwargs):
@@ -24,7 +32,7 @@ class FlickrUserManager(models.Manager):
                      'photosurl': unslash(person.photosurl._content),
                      'profileurl': unslash(person.profileurl._content),
                      'mobileurl': unslash(person.mobileurl._content),
-                     'last_sync': now(),
+                     #'last_sync': now(),
                      }
         return self.filter(pk=pk).update(**dict(user_data.items() + kwargs.items()))
 
@@ -44,7 +52,7 @@ class FlickrUser(models.Model):
 
     token = models.CharField(max_length=128, null=True, blank=True)
     perms = models.CharField(max_length=32, null=True, blank=True)
-    last_sync = models.DateTimeField(auto_now=True, auto_now_add=True)
+    last_sync = models.DateTimeField(null=True, blank=True)
 
     objects = FlickrUserManager()
 
@@ -60,12 +68,15 @@ class FlickrUser(models.Model):
             return '%sphotos/%s/' % (URL_BASE, self.username)
         return '%sphotos/%s/' % (URL_BASE, self.nsid)
 
+    def bump(self):
+        self.last_sync = now()
+        self.save()
 
 
 class FlickrModel(models.Model):
     flickr_id = models.CharField(unique=True, db_index=True, max_length=50)
     user = models.ForeignKey(FlickrUser)
-    show = models.BooleanField(default=True) #show the photo on your page?
+    show = models.BooleanField(default=True)  # #show the photo on your page?
     last_sync = models.DateTimeField(auto_now=True, auto_now_add=True)
 
     class Meta:
@@ -85,8 +96,7 @@ FLICKR_LICENSES = (
 
 class BigIntegerField(models.IntegerField):
     """
-    Defines a PostgreSQL compatible IntegerField needed to prevent 'integer
-    out of range' with large numbers.
+    Defines a PostgreSQL compatible IntegerField needed to prevent 'integer out of range' with large numbers.
     """
     def get_internal_type(self):
         return 'BigIntegerField'
@@ -100,6 +110,7 @@ class BigIntegerField(models.IntegerField):
 
 
 class PhotoManager(models.Manager):
+
     allowed_sizes = ['Square', 'Thumbnail', 'Small', 'Medium 640', 'Large', 'Original',]
 
     def visible(self, *args, **kwargs):
@@ -108,19 +119,19 @@ class PhotoManager(models.Manager):
     def public(self, *args, **kwargs):
         return self.visible(ispublic=1, *args, **kwargs)
 
-    def _prepare_data(self, info, sizes, flickr_user=None, exif=None, geo=None):
-        photo = bunchify(info['photo'])
+    def _prepare_data(self, info, sizes=None, flickr_user=None, exif=None, **kwargs):
+        photo = bunchify(info)
         photo_data = {
                   'flickr_id': photo.id, 'server': photo.server,
                   'secret': photo.secret, 'originalsecret': getattr(photo, 'originalsecret', ''), 'farm': photo.farm,
-                  'originalformat' : photo.originalformat,
-                  'title': photo.title._content, 'description': photo.description._content, 'date_taken': photo.dates.taken,
-                  'date_posted': ts_to_dt(photo.dates.posted), 'date_updated': ts_to_dt(photo.dates.lastupdate),
-                  'date_taken_granularity':  photo.dates.takengranularity,
-                  'ispublic': photo.visibility.ispublic, 'isfriend': photo.visibility.isfriend,
-                  'isfamily': photo.visibility.isfamily,
-                  'license': photo.license, 'tags': photo.tags.tag,
-                  'last_sync' : now(),
+                  'title': photo.title, 'description': photo.description, 'date_taken': photo.datetaken,
+                  'date_posted': ts_to_dt(photo.dateupload),
+                  'date_taken_granularity': photo.datetakengranularity,
+                  'ispublic': photo.ispublic, 'isfriend': photo.isfriend,
+                  'isfamily': photo.isfamily,
+                  'license': photo.license, 'tags': photo.tags,
+                  'geo_latitude': photo.latitude, 'geo_longitude': photo.longitude, 'geo_accuracy': photo.accuracy,
+                  'last_sync': now(),
                   }
         if flickr_user:
             photo_data['user'] = flickr_user
@@ -141,36 +152,39 @@ class PhotoManager(models.Manager):
             try:
                 photo_data['exif_camera'] = exif['photo']['camera']
                 for e in bunchify(exif['photo']['exif']):
-                    if e.label == 'Exposure':     photo_data['exif_exposure'] = unslash(e.raw._content)
-                    if e.label == 'Aperture':     photo_data['exif_aperture'] = unslash(e.clean._content)
-                    if e.label == 'ISO Speed':    photo_data['exif_iso'] = e.raw._content
-                    if e.label == 'Focal Length': photo_data['exif_focal'] = e.clean._content
-                    if e.label == 'Flash':        photo_data['exif_flash'] = e.raw._content
+                    if e.label == 'Exposure':
+                        photo_data['exif_exposure'] = unslash(e.raw._content)
+                    if e.label == 'Aperture':
+                        photo_data['exif_aperture'] = unslash(e.clean._content)
+                    if e.label == 'ISO Speed':
+                        photo_data['exif_iso'] = e.raw._content
+                    if e.label == 'Focal Length':
+                        photo_data['exif_focal'] = e.clean._content
+                    if e.label == 'Flash':
+                        photo_data['exif_flash'] = e.raw._content
             except KeyError:
                 pass
-            except AttributeError: # 'e.clean._content'
+            except AttributeError:  # #'e.clean._content'
                 pass
-        if geo:
-            pass
         return photo_data
 
     def _add_tags(self, obj, tags, override=False):
         try:
-            obj.tags.set(*[tag._content for tag in tags])
+            obj.tags.set(*[tag for tag in tags.split()])
         except KeyError:
             pass
 
-    def create_from_json(self, flickr_user, info, sizes, exif=None, geo=None, **kwargs):
+    def create_from_json(self, flickr_user, info, sizes=None, exif=None, **kwargs):
         """Create a record for flickr_user"""
-        photo_data = self._prepare_data(flickr_user=flickr_user, info=info, sizes=sizes, exif=exif, geo=geo, **kwargs)
+        photo_data = self._prepare_data(flickr_user=flickr_user, info=info, sizes=sizes, exif=exif, **kwargs)
         tags = photo_data.pop('tags')
         obj = self.create(**dict(photo_data.items() + kwargs.items()))
         self._add_tags(obj, tags)
         return obj
 
-    def update_from_json(self, flickr_id, info, sizes, exif=None, geo=None, update_tags=False, **kwargs):
+    def update_from_json(self, flickr_id, info, sizes=None, exif=None, update_tags=False, **kwargs):
         """Update a record with flickr_id"""
-        photo_data = self._prepare_data(info=info, sizes=sizes, exif=exif, geo=geo, **kwargs)
+        photo_data = self._prepare_data(info=info, sizes=sizes, exif=exif, **kwargs)
         tags = photo_data.pop('tags')
         result = self.filter(flickr_id=flickr_id).update(**dict(photo_data.items() + kwargs.items()))
         if result == 1 and update_tags:
@@ -179,9 +193,8 @@ class PhotoManager(models.Manager):
             self._add_tags(obj, tags)
         return result
 
-    def create_or_update_from_json(self, flickr_user, info, sizes, exif=None, geo=None, **kwargs):
+    def create_or_update_from_json(self, flickr_user, info, sizes=None, exif=None, geo=None, **kwargs):
         """Pretty self explanatory"""
-
 
 
 class Photo(FlickrModel):
@@ -191,8 +204,7 @@ class Photo(FlickrModel):
     server = models.PositiveSmallIntegerField()
     farm = models.PositiveSmallIntegerField()
     secret = models.CharField(max_length=10)
-    originalsecret = models.CharField(max_length=10, null=True, blank=True)
-    originalformat = models.CharField(max_length=4, null=True, blank=True)
+    originalsecret = models.CharField(max_length=10)
 
     title = models.CharField(max_length=255, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
@@ -274,7 +286,7 @@ class Photo(FlickrModel):
         return u'%s' % self.title
 
     def get_absolute_url(self):
-        return reverse('flickr_photo', args=[self.flickr_id,])
+        return reverse('flickr_photo', args=[self.flickr_id, ])
 
     @property
     def flickr_page_url(self):
@@ -287,13 +299,11 @@ class Photo(FlickrModel):
         except:
             pass
 
-
     def get_next_public_by_date_posted(self):
         try:
             return Photo.objects.public().filter(date_posted__gte=self.date_posted).exclude(flickr_id=self.flickr_id).order_by('date_posted', 'date_taken')[:1].get()
         except:
             pass
-
 
     def get_previous_by_date_posted(self):
         try:
@@ -307,13 +317,12 @@ class Photo(FlickrModel):
         except:
             pass
 
-
     """shortcuts - bringing some sanity"""
-    def get_next(self): return self.get_next_public_by_date_posted()
-    def get_prev(self): return self.get_previous_public_by_date_posted()
+    def get_next(self):
+        return self.get_next_public_by_date_posted()
 
-
-
+    def get_prev(self):
+        return self.get_previous_public_by_date_posted()
 
     def get_next_by_date_taken(self):
         try:
@@ -327,7 +336,6 @@ class Photo(FlickrModel):
         except:
             pass
 
-
     def get_next_in_photoset(self, photoset):
         if not hasattr(self, '_next_in_ps%s' % photoset.flickr_id):
             photo = None
@@ -339,7 +347,6 @@ class Photo(FlickrModel):
                 pass
             setattr(self, '_next_in_ps%s' % photoset.flickr_id, photo)
         return getattr(self, '_next_in_ps%s' % photoset.flickr_id)
-
 
     def get_previous_in_photoset(self, photoset):
         if not hasattr(self, '_previous_in_ps%s' % photoset.flickr_id):
@@ -412,6 +419,7 @@ for key,size in FLICKR_PHOTO_SIZES.items():
     label = size.get('label', None)
     setattr(Photo, label, property(lambda self, size=size: PhotoSize(self, size=size)))
 
+
 class PhotoSetManager(models.Manager):
 
     def visible(self, *args, **kwargs):
@@ -429,12 +437,12 @@ class PhotoSetManager(models.Manager):
         photoset = bunchify(info)
         photos = bunchify(photos['photoset']['photo'])
 
-        data = {  'flickr_id': photoset.id, 'server': photoset.server,
+        data = {'flickr_id': photoset.id, 'server': photoset.server,
                   'secret': photoset.secret, 'farm': photoset.farm, 'primary': photoset.primary,
                   'title': photoset.title._content, 'description': photoset.description._content,
                   'date_posted': ts_to_dt(photoset.date_create), 'date_updated': ts_to_dt(photoset.date_update),
                   'photos': photos,
-                  'last_sync' : now(),
+                  'last_sync': now(),
                   }
         if flickr_user:
             data['user'] = flickr_user
@@ -445,7 +453,7 @@ class PhotoSetManager(models.Manager):
         photoset_data = self._prepare_data(info=info, photos=photos, **kwargs)
         photos = photoset_data.pop('photos')
         result = self.filter(flickr_id=flickr_id).update(**dict(photoset_data.items() + kwargs.items()))
-        if result==1 and update_photos:
+        if result == 1 and update_photos:
             obj = self.get(flickr_id=flickr_id)
             obj.photos.clear()
             self._add_photos(obj, photos)
@@ -460,7 +468,6 @@ class PhotoSetManager(models.Manager):
         return obj
 
 
-
 class PhotoSet(FlickrModel):
     """http://www.flickr.com/services/api/explore/flickr.photosets.getInfo"""
 
@@ -470,7 +477,7 @@ class PhotoSet(FlickrModel):
 
     title = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True)
-    primary = models.CharField(max_length=50, null=True, blank=True) #flickr id of primary photo
+    primary = models.CharField(max_length=50, null=True, blank=True)  # #flickr id of primary photo
 
     date_posted = models.DateTimeField(null=True, blank=True)
     date_updated = models.DateTimeField(null=True, blank=True)
@@ -487,7 +494,7 @@ class PhotoSet(FlickrModel):
         return u'%s' % self.title
 
     def get_absolute_url(self):
-        return reverse('flickr_photoset', args=[self.flickr_id,])
+        return reverse('flickr_photoset', args=[self.flickr_id, ])
 
     @property
     def flickr_page_url(self):
@@ -498,10 +505,9 @@ class PhotoSet(FlickrModel):
             return Photo.objects.get(flickr_id=self.primary)
         except Photo.DoesNotExist:
             try:
-                return Photo.objects.filter(photoset__id__in=[self.id,]).latest()
+                return Photo.objects.filter(photoset__id__in=[self.id, ]).latest()
             except Photo.DoesNotExist:
                 pass
-
 
 
 class CollectionManager(models.Manager):
@@ -536,7 +542,7 @@ class CollectionManager(models.Manager):
             cols_data = data.pop('collections')
         if kwargs.pop('update', False):
             obj = self.filter(flickr_id=data['flickr_id']).update(**dict(data.items() + kwargs.items()))
-            if obj: #filter().update() didn't return object
+            if obj:  # #filter().update() didn't return object
                 obj = self.get(flickr_id=data['flickr_id'])
             else:
                 obj = self.create(**dict(data.items() + kwargs.items()))
@@ -608,7 +614,6 @@ class JsonCache(models.Model):
     added = models.DateTimeField(auto_now=True, auto_now_add=True)
 
 
-
 class PhotoDownload(models.Model):
 
     def upload_path(self, filename):
@@ -618,17 +623,10 @@ class PhotoDownload(models.Model):
 
     photo = models.OneToOneField(Photo)
     url = models.URLField(max_length=255, null=True, blank=True)
-    image_file = models.ImageField(upload_to=upload_path, null=True, blank=True)
+    image_file = models.FileField(upload_to=upload_path, null=True, blank=True)
     ori = models.NullBooleanField()
     errors = models.TextField(null=True, blank=True)
     date_downloaded = models.DateTimeField(auto_now=True, auto_now_add=True)
 
     def __unicode__(self):
         return u'%s' % str(self.photo)
-
-
-
-
-
-
-

@@ -12,5 +12,3 @@ urlpatterns = patterns('',
     url(r'^photo/(?P<flickr_id>.*)/$', "flickr.views.photo", name="flickr_photo"),
     url(r'^$', "flickr.views.index", name="flickr_index"),
 )
-
-

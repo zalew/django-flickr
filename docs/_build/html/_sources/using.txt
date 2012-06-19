@@ -1,0 +1,30 @@
+.. _using:
+
+Usage
+=====
+
+.. _using-sync:
+
+Sync photos database
+---------------------
+
+::
+
+./manage.py flickr_sync [options]
+
+
+.. _using-download
+
+Download photos
+----------------
+
+::
+
+./manage.py flickr_download [options]
+
+
+Bugs
+----
+
+The project is in early stages, expect bugs. Please `report any issues
+<https://bitbucket.org/zalew/django-flickr/issues?status=new&status=open>`_.
