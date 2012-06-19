@@ -99,6 +99,8 @@ json_exif = { "photo": { "id": "6110054503", "secret": "zzzzz", "server": "6199"
                         "clean": { "_content": "-1\/3 EV" } },
                     ] }, "stat": "ok" }
 
+json_geo = None
+
 json_user = { "person": { "id": "91259891@N00", "nsid": "91259891@N00", "ispro": 1, "iconserver": "2519", "iconfarm": 3, "path_alias": "zalew",
                     "username": { "_content": "zalew" },
                     "realname": { "_content": "jakub zalewski" },

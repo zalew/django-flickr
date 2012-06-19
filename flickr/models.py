@@ -151,7 +151,6 @@ class PhotoManager(models.Manager):
                 if url.type == 'photopage':
                     photo_info['url_page'] = unslash(url._content)
         else:
-            print photo_bunch
             photo_info = {
                         'flickr_id' : photo_bunch.id,
                         'server' : photo_bunch.server,
@@ -165,12 +164,13 @@ class PhotoManager(models.Manager):
                         'date_taken' : getattr(photo_bunch, 'datetaken', ''),
                         'date_taken_granularity' : getattr(photo_bunch, 'datetakengranularity', ''),
                         'date_updated' : ts_to_dt(getattr(photo_bunch, 'lastupdate', '')),
+                        'tags' : getattr(photo_bunch, 'tags', ''),
                         'ispublic' : photo_bunch.ispublic,
                         'isfriend' : photo_bunch.isfriend,
                         'isfamily' : photo_bunch.isfamily,
                         'license' : photo_bunch.license,
                         }
-            #'tags' : getattr(photo_bunch, 'tags', '')
+
         photo_data.update(photo_info)
 
         if flickr_user:
@@ -220,9 +220,20 @@ class PhotoManager(models.Manager):
             pass
 
     def _add_sizes(self, obj, photo, sizes):
-        raise NotImplementedError
-        for size in sizes['sizes']['size']:
-            obj.sizes.create_from_json(photo_instance=obj, photo=photo, size=size)
+        if sizes:
+            for size in sizes['sizes']['size']:
+                obj.sizes.create_from_json(photo=obj, size=size)
+        else:
+            for key, size in FLICKR_PHOTO_SIZES.iteritems():
+                url_suffix = getattr(size, 'url_suffix', None)
+                if url_suffix and getattr(photo, 'url_%s' % url_suffix, None):
+                    size_data = {
+                            'label' : key,
+                            'width' : getattr(photo, 'width_%s' % url_suffix, None),
+                            'height' : getattr(photo, 'height_%s' % url_suffix, None),
+                            'source' : getattr(photo, 'url_%s' % url_suffix, None),
+                            }
+                    obj.sizes.create_from_json(photo=obj, size=size_data)
 
     def create_from_json(self, flickr_user, photo, info=None, sizes=None, exif=None, geo=None, **kwargs):
         """Create a record for flickr_user"""
