@@ -26,7 +26,7 @@ class FlickrUserManager(models.Manager):
                      'photosurl': unslash(person.photosurl._content),
                      'profileurl': unslash(person.profileurl._content),
                      'mobileurl': unslash(person.mobileurl._content),
-                     'last_sync': now(),
+                     #'last_sync': now(),
                      }
         return self.filter(pk=pk).update(**dict(user_data.items() + kwargs.items()))
 
@@ -46,7 +46,7 @@ class FlickrUser(models.Model):
 
     token = models.CharField(max_length=128, null=True, blank=True)
     perms = models.CharField(max_length=32, null=True, blank=True)
-    last_sync = models.DateTimeField(auto_now=True, auto_now_add=True)
+    last_sync = models.DateTimeField(null=True, blank=True)
 
     objects = FlickrUserManager()
 
@@ -61,6 +61,10 @@ class FlickrUser(models.Model):
         if self.username:
             return '%sphotos/%s/' % (URL_BASE, self.username)
         return '%sphotos/%s/' % (URL_BASE, self.nsid)
+
+    def bump(self):
+        self.last_sync = now()
+        self.save()
 
 
 class FlickrModel(models.Model):
@@ -100,6 +104,7 @@ class BigIntegerField(models.IntegerField):
 
 
 class PhotoManager(models.Manager):
+
     allowed_sizes = ['Square', 'Thumbnail', 'Small', 'Medium 640', 'Large', 'Original',]
 
     def visible(self, *args, **kwargs):
@@ -108,22 +113,31 @@ class PhotoManager(models.Manager):
     def public(self, *args, **kwargs):
         return self.visible(ispublic=1, *args, **kwargs)
 
-    def _prepare_data(self, info, flickr_user=None, exif=None, geo=None):
-        photo = bunchify(info['photo'])
+    def _prepare_data(self, info, sizes=None, flickr_user=None, exif=None, **kwargs):
+        photo = bunchify(info)
         photo_data = {
                   'flickr_id': photo.id, 'server': photo.server,
                   'secret': photo.secret, 'originalsecret': getattr(photo, 'originalsecret', ''), 'farm': photo.farm,
-                  'originalformat' : getattr(photo, 'originalformat', ''),
-                  'title': photo.title._content, 'description': photo.description._content, 'date_taken': photo.dates.taken,
-                  'date_posted': ts_to_dt(photo.dates.posted), 'date_updated': ts_to_dt(photo.dates.lastupdate),
-                  'date_taken_granularity': photo.dates.takengranularity,
-                  'ispublic': photo.visibility.ispublic, 'isfriend': photo.visibility.isfriend,
-                  'isfamily': photo.visibility.isfamily,
-                  'license': photo.license, 'tags': photo.tags.tag,
+                  'title': photo.title, 'description': photo.description, 'date_taken': photo.datetaken,
+                  'date_posted': ts_to_dt(photo.dateupload),
+                  'date_taken_granularity': photo.datetakengranularity,
+                  'ispublic': photo.ispublic, 'isfriend': photo.isfriend,
+                  'isfamily': photo.isfamily,
+                  'license': photo.license, 'tags': photo.tags,
+                  'geo_latitude': photo.latitude, 'geo_longitude': photo.longitude, 'geo_accuracy': photo.accuracy,
                   'last_sync': now(),
                   }
         if flickr_user:
             photo_data['user'] = flickr_user
+        if sizes:
+            size_json = bunchify(sizes['sizes']['size'])
+            for size in size_json:
+                if size.label in self.allowed_sizes and size.label in FLICKR_PHOTO_SIZES.keys():
+                    label = FLICKR_PHOTO_SIZES[size.label]['label']
+                    photo_data = dict(photo_data.items() + {
+                                    label+'_width': size.width, label+'_height': size.height,
+                                    label+'_source': size.source, label+'_url': unslash(size.url),
+                                    }.items())
         for url in photo.urls.url:
             if url.type == 'photopage':
                 photo_data['url_page'] = unslash(url._content)
@@ -146,13 +160,11 @@ class PhotoManager(models.Manager):
                 pass
             except AttributeError:  # #'e.clean._content'
                 pass
-        if geo:
-            pass
         return photo_data
 
     def _add_tags(self, obj, tags, override=False):
         try:
-            obj.tags.set(*[tag._content for tag in tags])
+            obj.tags.set(*[tag for tag in tags.split()])
         except KeyError:
             pass
 
@@ -160,9 +172,9 @@ class PhotoManager(models.Manager):
         for size in sizes['sizes']['size']:
             obj.sizes.create_from_json(photo=obj, size=size)
 
-    def create_from_json(self, flickr_user, info, sizes=None, exif=None, geo=None, **kwargs):
+    def create_from_json(self, flickr_user, info, sizes=None, exif=None, **kwargs):
         """Create a record for flickr_user"""
-        photo_data = self._prepare_data(flickr_user=flickr_user, info=info, exif=exif, geo=geo, **kwargs)
+        photo_data = self._prepare_data(flickr_user=flickr_user, info=info, sizes=sizes, exif=exif, **kwargs)
         tags = photo_data.pop('tags')
         obj = self.create(**dict(photo_data.items() + kwargs.items()))
         self._add_tags(obj, tags)
@@ -170,9 +182,9 @@ class PhotoManager(models.Manager):
             self._add_sizes(obj, sizes)
         return obj
 
-    def update_from_json(self, flickr_id, info, sizes=None, exif=None, geo=None, update_tags=False, update_sizes=False, **kwargs):
+    def update_from_json(self, flickr_id, info, sizes=None, exif=None, update_tags=False, **kwargs):
         """Update a record with flickr_id"""
-        photo_data = self._prepare_data(info=info, exif=exif, geo=geo, **kwargs)
+        photo_data = self._prepare_data(info=info, sizes=sizes, exif=exif, **kwargs)
         tags = photo_data.pop('tags')
         result = self.filter(flickr_id=flickr_id).update(**dict(photo_data.items() + kwargs.items()))
         if result == 1:
@@ -196,7 +208,7 @@ class Photo(FlickrModel):
     server = models.PositiveSmallIntegerField()
     farm = models.PositiveSmallIntegerField()
     secret = models.CharField(max_length=10)
-    originalsecret = models.CharField(max_length=10, null=True, blank=True)
+    originalsecret = models.CharField(max_length=10)
     originalformat = models.CharField(max_length=4, null=True, blank=True)
 
     title = models.CharField(max_length=255, null=True, blank=True)
@@ -467,7 +479,6 @@ for key,size in FLICKR_PHOTO_SIZES.items():
         setattr(Photo, '%s_%s'%(label, dato), property(get_property, set_property))
 
 
-
 class PhotoSetManager(models.Manager):
 
     def visible(self, *args, **kwargs):
@@ -671,7 +682,7 @@ class PhotoDownload(models.Model):
 
     photo = models.OneToOneField(Photo)
     url = models.URLField(max_length=255, null=True, blank=True)
-    image_file = models.ImageField(upload_to=upload_path, null=True, blank=True)
+    image_file = models.FileField(upload_to=upload_path, null=True, blank=True)
     ori = models.NullBooleanField()
     errors = models.TextField(null=True, blank=True)
     date_downloaded = models.DateTimeField(auto_now=True, auto_now_add=True)

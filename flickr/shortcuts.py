@@ -17,9 +17,9 @@ def get_token_for_user(user):
         return None
 
 
-def get_photos_json(nsid, token, page=1, per_page=500, min_upload_date=None):
+def get_photos_json(nsid, token, page=1, per_page=500, min_upload_date=None, extras='description, license, date_upload, date_taken, owner_name, icon_server, original_format, last_update, geo, tags, machine_tags, o_dims, views, media, path_alias, url_sq, url_t, url_s, url_q, url_m, url_n, url_z, url_c, url_l, url_o'):
     api = FlickrApi(FLICKR_KEY, FLICKR_SECRET, token)
-    return bunchify(api.get(method='people.getPhotos', user_id=nsid, page=page, per_page=per_page, min_upload_date=min_upload_date))
+    return bunchify(api.get(method='people.getPhotos', user_id=nsid, page=page, per_page=per_page, min_upload_date=min_upload_date, extras=extras))
 
 
 def get_all_photos(nsid, token, page=None, per_page=None, min_upload_date=None):
@@ -50,6 +50,18 @@ def get_photo_details_jsons(photo_id, token):
     time.sleep(1)
     geo = None
     return info, sizes, exif, geo
+
+
+def get_photo_exif_json(photo_id, token):
+    api = FlickrApi(FLICKR_KEY, FLICKR_SECRET, token)
+    exif = api.get(method='photos.getExif', photo_id=photo_id)
+    return exif
+
+
+def get_photo_sizes_json(photo_id, token):
+    api = FlickrApi(FLICKR_KEY, FLICKR_SECRET, token)
+    sizes = api.get(method='photos.getSizes', photo_id=photo_id)
+    return sizes
 
 
 def get_photosets_json(nsid, token):
