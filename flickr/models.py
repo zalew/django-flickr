@@ -199,11 +199,14 @@ class PhotoManager(models.Manager):
 
         if geo:
             """ Geo data can come from 'photos.getGeo' """
-            geo_data = {
-                'geo_latitude' : geo['photo']['location']['latitude'],
-                'geo_longitude' : geo['photo']['location']['longitude'],
-                'geo_accuracy' : geo['photo']['location']['accuracy'],
-                }
+            try:
+                geo_data = {
+                    'geo_latitude' : geo['photo']['location']['latitude'],
+                    'geo_longitude' : geo['photo']['location']['longitude'],
+                    'geo_accuracy' : geo['photo']['location']['accuracy'],
+                    }
+            except: # \todo TBD: not really tested
+                geo_data = {}
         else:
             geo_data = {
                 'geo_latitude' : getattr(photo_bunch, 'latitude', ''),
@@ -227,8 +230,8 @@ class PhotoManager(models.Manager):
             for size in sizes['sizes']['size']:
                 obj.sizes.create_from_json(photo=obj, size=size)
         else:
-            for key, size in FLICKR_PHOTO_SIZES.iteritems():
-                url_suffix = getattr(size, 'url_suffix', None)
+            for key, size in FLICKR_PHOTO_SIZES.items():
+                url_suffix = size.get('url_suffix', None)
                 if url_suffix and getattr(photo, 'url_%s' % url_suffix, None):
                     size_data = {
                             'label' : key,
@@ -405,7 +408,7 @@ class PhotoSizeDataManager(models.Manager):
                 'width': size_data.width,
                 'height': size_data.height,
                 'source': size_data.source,
-                'url': unslash(size_data.url),
+                'url': unslash(getattr(size_data, 'url', '')),
               }
         if photo:
             data['photo'] = photo

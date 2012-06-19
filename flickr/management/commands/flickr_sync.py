@@ -6,7 +6,7 @@ from flickr.management.commands import FlickrCommand
 from flickr.models import FlickrUser, Photo, JsonCache, PhotoSet, Collection
 from flickr.shortcuts import get_all_photos, get_photosets_json, \
     get_photoset_photos_json, get_user_json, get_collections_tree_json, \
-    get_photo_exif_json, get_photo_sizes_json, get_photo_info_json
+    get_photo_exif_json, get_photo_sizes_json, get_photo_info_json, get_photo_geo_json
 from optparse import make_option
 import datetime
 import time
@@ -138,7 +138,7 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
                         self.v(' - fetching exif', 2)
                         exif = get_photo_exif_json(photo_id=photo.id, token=flickr_user.token)
                     if options.get('geo'):
-                        self.v(' - fetching exif', 2)
+                        self.v(' - fetching geo', 2)
                         geo = get_photo_geo_json(photo_id=photo.id, token=flickr_user.token)
                     #info, sizes, exif, geo = get_photo_details_jsons(photo_id=photo.id, token=flickr_user.token)
                     if not options.get('test', False):
