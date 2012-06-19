@@ -6,7 +6,7 @@ from flickr.management.commands import FlickrCommand
 from flickr.models import FlickrUser, Photo, JsonCache, PhotoSet, Collection
 from flickr.shortcuts import get_all_photos, get_photosets_json, \
     get_photoset_photos_json, get_user_json, get_collections_tree_json, \
-    get_photo_exif_json, get_photo_sizes_json
+    get_photo_exif_json, get_photo_sizes_json, get_photo_info_json
 from optparse import make_option
 import datetime
 import time
@@ -26,12 +26,18 @@ class Command(FlickrCommand):
 
         # Elements to sync
 
+        make_option('--info', action='store_true', dest='info', default=False,
+            help='Fetch info for photos. It will take a long time as it needs to fetch Flickr data for every photo separately.'),
+
         make_option('--exif', action='store_true', dest='exif', default=False,
             help='Fetch exif for photos. It will take a long time as it needs to fetch Flickr data for every photo separately.'),
 
         make_option('--sizes', action='store_true', dest='sizes', default=False,
             help='Fetch sizes details for photos. It is not needed, sizes can be obtained dynanmically. \
 It will take a long time as it needs to fetch Flickr data for every photo separately. '),
+
+        make_option('--geo', action='store_true', dest='geo', default=False,
+            help='Fetch geo data for photos. It will take a long time as it needs to fetch Flickr data for every photo separately.'),
 
         make_option('--photosets', action='store_true', dest='photosets', default=False,
             help='Sync photosets. Photos must be synced first. If photo from photoset not in our db, it will be ommited.'),
@@ -119,36 +125,41 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
             self.v('- got %d photos, it might take a while...' % length, 1)
             i = 0
             for photo in photos:
-                sizes = exif = None
+                info = sizes = exif = geo = None
                 self.v('- processing photo #%s "%s"' % (photo.id, photo.title), 2)
                 try:
+                    if options.get('info'):
+                        self.v(' - fetching info', 2)
+                        info = get_photo_info_json(photo_id=photo.id, token=flickr_user.token)
                     if options.get('sizes'):
                         self.v(' - fetching sizes', 2)
                         sizes = get_photo_sizes_json(photo_id=photo.id, token=flickr_user.token)
                     if options.get('exif'):
                         self.v(' - fetching exif', 2)
                         exif = get_photo_exif_json(photo_id=photo.id, token=flickr_user.token)
+                    if options.get('geo'):
+                        self.v(' - fetching exif', 2)
+                        geo = get_photo_geo_json(photo_id=photo.id, token=flickr_user.token)
                     #info, sizes, exif, geo = get_photo_details_jsons(photo_id=photo.id, token=flickr_user.token)
-                    info = photo
                     if not options.get('test', False):
                         if options.get('initial', False):
                             #blindly create for initial sync (assumpts table is empty)
                             self.v(' - inserting to db', 2)
-                            Photo.objects.create_from_json(flickr_user=flickr_user, info=info, sizes=sizes, exif=exif)
+                            Photo.objects.create_from_json(flickr_user=flickr_user, photo=photo, info=info, sizes=sizes, exif=exif, geo=geo)
                         else:
                             if not Photo.objects.filter(flickr_id=photo.id):
                                 self.v(' - inserting to db', 2)
-                                Photo.objects.create_from_json(flickr_user=flickr_user, info=info, sizes=sizes, exif=exif)
+                                Photo.objects.create_from_json(flickr_user=flickr_user, photo=photo, info=info, sizes=sizes, exif=exif, geo=geo)
                             else:
                                 self.v(' - updating db', 2)
-                                Photo.objects.update_from_json(flickr_id=photo.id, info=info, sizes=sizes, exif=exif, update_tags=options.get('update_tags', False))
+                                Photo.objects.update_from_json(flickr_id=photo.id, photo=photo, info=info, sizes=sizes, exif=exif, geo=geo, update_tags=options.get('update_tags', False))
                     else:
                         self.v(' - it\'s a test, so not writing to db', 2)
                 except Exception as e:
                     self.v('- ERR failing silently exception "%s"' % (e), 1)
                     # in case sth got wrong with a data set, let's log all the data to db and not break the ongoing process
                     try:
-                        JsonCache.objects.create(flickr_id=photo.id, info=info, sizes=sizes, exif=exif, exception=e)
+                        JsonCache.objects.create(flickr_id=photo.id, photo=photo, info=info, sizes=sizes, exif=exif, geo=geo, exception=e)
                     except Exception as e2:
                         #whoa sth is really messed up
                         JsonCache.objects.create(flickr_id=photo.id, exception=e2)

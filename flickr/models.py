@@ -110,35 +110,74 @@ class PhotoManager(models.Manager):
     def public(self, *args, **kwargs):
         return self.visible(ispublic=1, *args, **kwargs)
 
-    def _prepare_data(self, info, sizes=None, flickr_user=None, exif=None, **kwargs):
-        photo = bunchify(info)
-        photo_data = {
-                  'flickr_id': photo.id, 'server': photo.server,
-                  'secret': photo.secret, 'originalsecret': getattr(photo, 'originalsecret', ''), 'farm': photo.farm,
-                  'title': photo.title, 'description': photo.description, 'date_taken': photo.datetaken,
-                  'date_posted': ts_to_dt(photo.dateupload),
-                  'date_taken_granularity': photo.datetakengranularity,
-                  'ispublic': photo.ispublic, 'isfriend': photo.isfriend,
-                  'isfamily': photo.isfamily,
-                  'license': photo.license, 'tags': photo.tags,
-                  'geo_latitude': photo.latitude, 'geo_longitude': photo.longitude, 'geo_accuracy': photo.accuracy,
-                  'last_sync': now(),
-                  }
+    def _prepare_data(self, photo, info=None, flickr_user=None, exif=None, geo=None, **kwargs):
+        """
+        Returns a dict with all information related to a photo. As some info
+        can be in several parameters, it returns data from the most especific
+        one.
+
+        @params photo: data for one photo as returned from 'flickr.people.getPhotos'
+        @params info: data for one photo as returned from 'flickr.photos.getInfo'
+        @params exif: data for one photo as returned from 'flickr.photos.getExif'
+        @params geo: data for one photo as returned from 'flickr.photos.geo.getLocation'
+        @params flickr_user: FlickrUser object for the given photo
+        @return:    the dict with all photo data.
+        """
+        photo_bunch = bunchify(photo)
+        photo_data = {}
+        if info:
+            """ With data returned from 'photos.getInfo' (no need of 'photo' dict)."""
+            info_bunch = bunchify(info)
+            photo_info = {
+                        'flickr_id' : info_bunch.id,
+                        'server' : info_bunch.server,
+                        'farm' : info_bunch.farm,
+                        'secret' : info_bunch.secret,
+                        'originalsecret' : getattr(info_bunch, 'originalsecret', ''),
+                        'originalformat' : getattr(info_bunch, 'originalformat', ''),
+                        'title' : info_bunch.title._content,
+                        'description' : info_bunch.description._content,
+                        'date_posted' : ts_to_dt(info_bunch.dates.dateupload),
+                        'date_taken' : info_bunch.dates.taken,
+                        'date_taken_granularity' : info_bunch.dates.takengranularity,
+                        'date_updated' : ts_to_dt(info_bunch.dates.lastupdate),
+                        'tags' : info_bunch.tags.tag,
+                        'ispublic' : info_bunch.visibility.ispublic,
+                        'isfriend' : info_bunch.visibility.isfriend,
+                        'isfamily' : info_bunch.visibility.isfamily,
+                        'license' : info_bunch.license,
+                        }
+            for url in info_bunch.url.url:
+                if url.type == 'photopage':
+                    photo_info['url_page'] = unslash(url._content)
+        else:
+            print photo_bunch
+            photo_info = {
+                        'flickr_id' : photo_bunch.id,
+                        'server' : photo_bunch.server,
+                        'farm' : photo_bunch.farm,
+                        'secret' : photo_bunch.secret,
+                        'originalsecret' : getattr(photo_bunch, 'originalsecret', ''),
+                        'originalformat' : getattr(photo_bunch, 'originalformat', ''),
+                        'title' : photo_bunch.title,
+                        'description' : getattr(getattr(photo_bunch, 'description', {}), '_content', ''),
+                        'date_posted' : ts_to_dt(getattr(photo_bunch, 'dateupload', '')),
+                        'date_taken' : getattr(photo_bunch, 'datetaken', ''),
+                        'date_taken_granularity' : getattr(photo_bunch, 'datetakengranularity', ''),
+                        'date_updated' : ts_to_dt(getattr(photo_bunch, 'lastupdate', '')),
+                        'ispublic' : photo_bunch.ispublic,
+                        'isfriend' : photo_bunch.isfriend,
+                        'isfamily' : photo_bunch.isfamily,
+                        'license' : photo_bunch.license,
+                        }
+            #'tags' : getattr(photo_bunch, 'tags', '')
+        photo_data.update(photo_info)
+
         if flickr_user:
-            photo_data['user'] = flickr_user
-        if sizes:
-            size_json = bunchify(sizes['sizes']['size'])
-            for size in size_json:
-                if size.label in self.allowed_sizes and size.label in FLICKR_PHOTO_SIZES.keys():
-                    label = FLICKR_PHOTO_SIZES[size.label]['label']
-                    photo_data = dict(photo_data.items() + {
-                                    label + '_width': size.width, label + '_height': size.height,
-                                    label + '_source': size.source, label + '_url': unslash(size.url),
-                                    }.items())
-        for url in photo.urls.url:
-            if url.type == 'photopage':
-                photo_data['url_page'] = unslash(url._content)
+            photo_data.update({'user' : flickr_user})
+
         if exif:
+            """ Exif data can only come from 'photos.getExif' """
             photo_data['exif'] = str(exif)
             try:
                 photo_data['exif_camera'] = exif['photo']['camera']
@@ -157,6 +196,21 @@ class PhotoManager(models.Manager):
                 pass
             except AttributeError:  # #'e.clean._content'
                 pass
+
+        if geo:
+            """ Geo data can come from 'photos.getGeo' """
+            geo_data = {
+                'geo_latitude' : geo['photo']['location']['latitude'],
+                'geo_longitude' : geo['photo']['location']['longitude'],
+                'geo_accuracy' : geo['photo']['location']['accuracy'],
+                }
+        else:
+            geo_data = {
+                'geo_latitude' : getattr(photo_bunch, 'latitude', ''),
+                'geo_longitude' : getattr(photo_bunch, 'longitude', ''),
+                'geo_accuracy' : getattr(photo_bunch, 'accuracy', ''),
+                }
+        photo_data.update(geo_data)
         return photo_data
 
     def _add_tags(self, obj, tags):
@@ -165,23 +219,23 @@ class PhotoManager(models.Manager):
         except KeyError:
             pass
 
-    def _add_sizes(self, obj, sizes):
+    def _add_sizes(self, obj, photo, sizes):
+        raise NotImplementedError
         for size in sizes['sizes']['size']:
-            obj.sizes.create_from_json(photo=obj, size=size)
+            obj.sizes.create_from_json(photo_instance=obj, photo=photo, size=size)
 
-    def create_from_json(self, flickr_user, info, sizes=None, exif=None, **kwargs):
+    def create_from_json(self, flickr_user, photo, info=None, sizes=None, exif=None, geo=None, **kwargs):
         """Create a record for flickr_user"""
-        photo_data = self._prepare_data(flickr_user=flickr_user, info=info, sizes=sizes, exif=exif, **kwargs)
+        photo_data = self._prepare_data(flickr_user=flickr_user, photo=photo, info=info, exif=exif, geo=geo, **kwargs)
         tags = photo_data.pop('tags')
         obj = self.create(**dict(photo_data.items() + kwargs.items()))
         self._add_tags(obj, tags)
-        if sizes:
-            self._add_sizes(obj, sizes)
+        self._add_sizes(obj, photo, sizes)
         return obj
 
-    def update_from_json(self, flickr_id, info, sizes=None, exif=None, **kwargs):
+    def update_from_json(self, flickr_id, photo, info=None, sizes=None, exif=None, geo=None, **kwargs):
         """Update a record with flickr_id"""
-        photo_data = self._prepare_data(info=info, sizes=sizes, exif=exif, **kwargs)
+        photo_data = self._prepare_data(photo=photo, info=info, exif=exif, geo=geo, **kwargs)
         tags = photo_data.pop('tags')
         result = self.filter(flickr_id=flickr_id).update(**dict(photo_data.items() + kwargs.items()))
         if result == 1:
@@ -190,8 +244,8 @@ class PhotoManager(models.Manager):
                 obj.tags.clear()
                 self._add_tags(obj, tags)
             if kwargs.get('update_sizes', False):
-                obj.sizes.clear()
-                self._add_sizes(obj, sizes)
+                obj.sizes.clear() # Delete all sizes or only update them?
+                self._add_sizes(obj, photo, sizes)
         return result
 
     def create_or_update_from_json(self, flickr_user, info, sizes=None, exif=None, geo=None, **kwargs):

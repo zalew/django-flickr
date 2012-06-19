@@ -48,8 +48,14 @@ def get_photo_details_jsons(photo_id, token):
     time.sleep(1)
     exif = api.get(method='photos.getExif', photo_id=photo_id)
     time.sleep(1)
-    geo = None
+    geo = api.get(method='photos.geo.getLocation', photo_id=photo_id)
     return info, sizes, exif, geo
+
+
+def get_photo_info_json(photo_id, token):
+    api = FlickrApi(FLICKR_KEY, FLICKR_SECRET, token)
+    info = api.get(method='photos.getInfo', photo_id=photo_id)
+    return info
 
 
 def get_photo_exif_json(photo_id, token):
@@ -62,6 +68,11 @@ def get_photo_sizes_json(photo_id, token):
     api = FlickrApi(FLICKR_KEY, FLICKR_SECRET, token)
     sizes = api.get(method='photos.getSizes', photo_id=photo_id)
     return sizes
+
+def get_photo_geo_json(photo_id, token):
+    api = FlickrApi(FLICKR_KEY, FLICKR_SECRET, token)
+    geo = api.get(method='photos.geo.getLocation', photo_id=photo_id)
+    return geo
 
 
 def get_photosets_json(nsid, token):
