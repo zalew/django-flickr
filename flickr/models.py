@@ -127,7 +127,7 @@ class PhotoManager(models.Manager):
         photo_data = {}
         if info:
             """ With data returned from 'photos.getInfo' (no need of 'photo' dict)."""
-            info_bunch = bunchify(info)
+            info_bunch = bunchify(info['photo'])
             photo_info = {
                         'flickr_id' : info_bunch.id,
                         'server' : info_bunch.server,
@@ -137,7 +137,7 @@ class PhotoManager(models.Manager):
                         'originalformat' : getattr(info_bunch, 'originalformat', ''),
                         'title' : info_bunch.title._content,
                         'description' : info_bunch.description._content,
-                        'date_posted' : ts_to_dt(info_bunch.dates.dateupload),
+                        'date_posted' : ts_to_dt(info_bunch.dates.posted),
                         'date_taken' : info_bunch.dates.taken,
                         'date_taken_granularity' : info_bunch.dates.takengranularity,
                         'date_updated' : ts_to_dt(info_bunch.dates.lastupdate),
@@ -147,7 +147,7 @@ class PhotoManager(models.Manager):
                         'isfamily' : info_bunch.visibility.isfamily,
                         'license' : info_bunch.license,
                         }
-            for url in info_bunch.url.url:
+            for url in info_bunch.urls.url:
                 if url.type == 'photopage':
                     photo_info['url_page'] = unslash(url._content)
         else:
@@ -217,6 +217,9 @@ class PhotoManager(models.Manager):
         try:
             obj.tags.set(*[tag for tag in tags.split()])
         except KeyError:
+            pass
+        except:
+            # \todo TBD: implements feeders: from 'getPhotos' and from 'getInfo'
             pass
 
     def _add_sizes(self, obj, photo, sizes):

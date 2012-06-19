@@ -109,13 +109,16 @@ class FlickrModelTests(TestCase):
         self.assertEqual(cols.count(), 9)
         cols = Collection.objects.filter(user=self.flickr_user).exclude(parent=None)
         self.assertEqual(cols.count(), 6)
-    """
+
     def test_dynamic_sizes(self):
-        json_info = json_photos_extras['photos']['photo'][0]
+        json_info_photo = json_photos_extras['photos']['photo'][0]
+        json_info_data = json_info # json_photos_extras['photos']['photo'][0]
+        tags = bunchify(json_info_photo)
+        tags = tags.tags
 
         FlickrUser.objects.update_from_json(self.flickr_user.id, json_user)
         self.flickr_user = FlickrUser.objects.get(flickr_id=json_user['person']['id'])
-        photo = Photo.objects.create_from_json(flickr_user=self.flickr_user, photo=json_info, sizes=None, exif=json_exif)
+        photo = Photo.objects.create_from_json(flickr_user=self.flickr_user, photo=json_info_photo, info=json_info_data, sizes=None, exif=json_exif)
         size_bunch = bunchify(json_sizes['sizes']['size'])
         for size in size_bunch:
             self.assertEqual(unslash(size.source), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).source)
@@ -128,25 +131,24 @@ class FlickrModelTests(TestCase):
         self.assertEqual(photo.medium_source, photo.medium.source)
         self.assertEqual(photo.large_source, photo.large.source)
         self.assertEqual(photo.ori_source, photo.ori.source)
-    """
-    """
+
+
     def test_dynamic_sizes_dbhits(self):
         json_info = json_photos_extras['photos']['photo'][0]
 
         FlickrUser.objects.update_from_json(self.flickr_user.id, json_user)
         self.flickr_user = FlickrUser.objects.get(flickr_id=json_user['person']['id'])
-        photo = Photo.objects.create_from_json(flickr_user=self.flickr_user, info=json_info, sizes=None, exif=json_exif)
+        photo = Photo.objects.create_from_json(flickr_user=self.flickr_user, photo=json_info, sizes=None, exif=json_exif)
         photo = Photo.objects.get(flickr_id=photo.flickr_id)
         with self.assertNumQueries(1):
             size_bunch = bunchify(json_sizes['sizes']['size'])
             for size in size_bunch:
                 self.assertEqual(unslash(size.source), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).source)
                 self.assertEqual(unslash(size.url), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).url)
-        Photo.objects.update_from_json(flickr_id=photo.flickr_id, info=json_info, sizes=json_sizes, exif=json_exif)
+        Photo.objects.update_from_json(flickr_id=photo.flickr_id, photo=json_info, sizes=json_sizes, exif=json_exif)
         photo = Photo.objects.get(flickr_id=photo.flickr_id)
         with self.assertNumQueries(1):
             size_bunch = bunchify(json_sizes['sizes']['size'])
             for size in size_bunch:
                 self.assertEqual(unslash(size.source), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).source)
                 self.assertEqual(unslash(size.url), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).url)
-    """
