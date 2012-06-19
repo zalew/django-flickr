@@ -11,6 +11,8 @@ syntax: regexp
 ^settings\.py$
 ^urls\.py$
 ^templates$
+^static$
+^media$
 ^_dev$
 ^.settings$
 ^.project$
