@@ -30,7 +30,7 @@ class Command(FlickrCommand):
         make_option('--public', '-p', action='store_true', dest='public', default=False,
             help='Only public photos.'),
 
-        make_option('--large', '-l', action='store_true', dest='large', default=False,
+        make_option('--size', '-s', action='store_true', dest='size', default='ori',
             help='Large instead of original (f.ex. for accounts with no access to original).'),
 
         make_option('--reset', '-r', action='store_true', dest='reset', default=False,
@@ -61,18 +61,14 @@ class Command(FlickrCommand):
         for photo in photos:
             i += 1
             message = '.' * i
-            if options.get('large'):
-                url = photo.large_source
-            else:
-                url = photo.ori_source
+            size = options.get('size')
+            url = getattr(photo, size).source
             if not options.get('all'):
                 dphoto = PhotoDownload.objects.create(photo=photo)
             else:
                 dphoto, cr = PhotoDownload.objects.get_or_create(photo=photo)
             dphoto.url = url
-            dphoto.ori = True
-            if options.get('large'):
-                dphoto.ori = False
+            dphoto.size = options.get('size')
             try:
                 response = urllib2.urlopen(url)
                 if response.headers['content-type'] in ['image/jpeg', 'image/jpg']:

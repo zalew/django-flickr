@@ -760,7 +760,7 @@ class PhotoDownload(models.Model):
     photo = models.OneToOneField(Photo)
     url = models.URLField(max_length=255, null=True, blank=True)
     image_file = models.FileField(upload_to=upload_path, null=True, blank=True)
-    ori = models.NullBooleanField()
+    size = models.CharField(max_length = 10, choices = [(v['label'], k) for k,v in FLICKR_PHOTO_SIZES.iteritems()])
     errors = models.TextField(null=True, blank=True)
     date_downloaded = models.DateTimeField(auto_now=True, auto_now_add=True)
 

@@ -46,7 +46,7 @@ admin.site.register(FlickrUser, FlickrUserAdmin)
 
 class DownloadAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_downloaded'
-    list_display = ('photo', 'date_downloaded', 'ori')
+    list_display = ('photo', 'date_downloaded', 'size')
     list_display_links = ('photo', 'date_downloaded')
     list_filter = ('date_downloaded',)
     #prepopulated_fields = {'slug': ('title',)}
