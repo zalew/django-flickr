@@ -225,21 +225,10 @@ class PhotoManager(models.Manager):
             # \todo TBD: implements feeders: from 'getPhotos' and from 'getInfo'
             pass
 
-    def _add_sizes(self, obj, photo, sizes):
+    def _add_sizes(self, obj, sizes):
         if sizes:
             for size in sizes['sizes']['size']:
                 obj.sizes.create_from_json(photo=obj, size=size)
-        else:
-            for key, size in FLICKR_PHOTO_SIZES.items():
-                url_suffix = size.get('url_suffix', None)
-                if url_suffix and getattr(photo, 'url_%s' % url_suffix, None):
-                    size_data = {
-                            'label' : key,
-                            'width' : getattr(photo, 'width_%s' % url_suffix, None),
-                            'height' : getattr(photo, 'height_%s' % url_suffix, None),
-                            'source' : getattr(photo, 'url_%s' % url_suffix, None),
-                            }
-                    obj.sizes.create_from_json(photo=obj, size=size_data)
 
     def create_from_json(self, flickr_user, photo, info=None, sizes=None, exif=None, geo=None, **kwargs):
         """Create a record for flickr_user"""
@@ -247,22 +236,24 @@ class PhotoManager(models.Manager):
         tags = photo_data.pop('tags')
         obj = self.create(**dict(photo_data.items() + kwargs.items()))
         self._add_tags(obj, tags)
-        self._add_sizes(obj, photo, sizes)
+        self._add_sizes(obj, sizes)
         return obj
 
     def update_from_json(self, flickr_id, photo, info=None, sizes=None, exif=None, geo=None, **kwargs):
         """Update a record with flickr_id"""
+        update_tags = kwargs.pop('update_tags', False)
+        update_sizes = kwargs.pop('update_sizes', False)
         photo_data = self._prepare_data(photo=photo, info=info, exif=exif, geo=geo, **kwargs)
         tags = photo_data.pop('tags')
         result = self.filter(flickr_id=flickr_id).update(**dict(photo_data.items() + kwargs.items()))
         if result == 1:
             obj = self.get(flickr_id=flickr_id)
-            if kwargs.get('update_tags', False):
+            if update_tags:
                 obj.tags.clear()
                 self._add_tags(obj, tags)
-            if kwargs.get('update_sizes', False):
+            if update_sizes:
                 obj.sizes.clear() # Delete all sizes or only update them?
-                self._add_sizes(obj, photo, sizes)
+                self._add_sizes(obj, sizes)
         return result
 
     def create_or_update_from_json(self, flickr_user, info, sizes=None, exif=None, geo=None, **kwargs):
