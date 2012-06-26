@@ -13,34 +13,42 @@ Sync photos database
 
 ::
 
-  -i, --initial         Initial sync. For improved performance it assumpts db
-                        flickr tables are empty and blindly hits create().
-  -d DAYS, --days=DAYS  Sync photos from the last n days. Useful for cron
-                        jobs.
   -u USER_ID, --user=USER_ID
                         Sync for a particular user. Default is 1 (in most
                         cases it's the admin and you're using it only for
                         yourself).
+  -i, --info            Fetch info for photos. It will take a long time to
+                        sync as it needs to fetch Flickr data for every photo
+                        separately.
+  -e, --exif            Fetch exif for photos. It will take a long time to
+                        sync as it needs to fetch Flickr data for every photo
+                        separately.
+  -s, --sizes           Fetch sizes details for photos. It is not needed,
+                        sizes can be obtained dynanmically. It will take a
+                        long time as it needs to fetch Flickr data for every
+                        photo separately.
+  -g, --geo             Fetch geo data for photos. It will take a long time as
+                        it needs to fetch Flickr data for every photo
+                        separately.
+  -p, --photosets       Sync photosets. Photos must be synced first. If photo
+                        from photoset not in our db, it will be ommited.
+  -c, --collections     Sync collections. Photos and sets must be synced
+                        first.
+  --no-photos           Don't sync photos.
+  -d DAYS, --days=DAYS  Sync photos from the last n days.
   --page=PAGE           Grab a specific portion of photos. To be used with
                         --per_page.
-  --per_page=PER_PAGE   How many photos per page should we grab? Set low value
+  --per-page=PER_PAGE   How many photos per page should we grab? Set low value
                         (10-50) for daily/weekly updates so there is less to
                         parse, set high value (200-500) for initial sync and
                         big updates so we hit flickr less.
-  --force_update        If photo in db, override with new data.
-  --photosets           Sync photosets (only photosets, no photos sync action
-                        is run). Photos must be synced first. If photo from
-                        photoset not in our db, it will be ommited.
-  --collections         Sync collections. Photos and sets must be synced
-                        first.
-  --photos              Sync photos (only photos, no photosets sync action is
-                        run).
-  --update_photos       Update photos when updating a photoset.
-  --update_tags         Update tags when updating a photo.
+  --ils                 Ignore last_sync.
+  --initial             It assumpts db flickr tables are empty and blindly
+                        hits create().
   -t, --test            Test/simulate. Don't write results to db.
 
 
-Note: behavior soon to be changed (in 0.3.x releases) to simplify.
+
 
 Download photos
 ----------------
