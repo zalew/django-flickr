@@ -1,4 +1,4 @@
-{% if flickr_link %}<a href="{{ photo.url_page }}">{% endif %}
+{% if flickr_link %}<a href="{{ photo.flickr_page_url }}">{% endif %}
 {% if size == 'ori' %}
 <img src="{{ photo.ori_source }}" width="{{ photo.ori_width }}" height="{{ photo.ori_height }}" alt="{{ photo.title }}" title="{{ photo.title }}" />
 {% endif %}
@@ -7,6 +7,9 @@
 {% endif %}
 {% if size == 'medium' %}
 <img src="{{ photo.medium_source }}" width="{{ photo.medium_width }}" height="{{ photo.medium_height }}" alt="{{ photo.title }}" title="{{ photo.title }}" />
+{% endif %}
+{% if size == 'medium640' %}
+<img src="{{ photo.medium640.source }}" width="{{ photo.medium640.width }}" height="{{ photo.medium640.height }}" alt="{{ photo.title }}" title="{{ photo.title }}" />
 {% endif %}
 {% if size == 'small' %}
 <img src="{{ photo.small_source }}" width="{{ photo.small_width }}" height="{{ photo.small_height }}" alt="{{ photo.title }}" title="{{ photo.title }}" />

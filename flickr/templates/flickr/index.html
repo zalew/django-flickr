@@ -6,11 +6,12 @@
 <h2>Photos {% if photoset %}from set '{{ photoset.title }}'{% endif %}</h2>
 	<ul class="flickr photos">
 	{% for photo in photo_list %}
-	<li>{% flickr_photo photo "small" 1 %}
+	<li>{% flickr_photo photo "large" 1 %}
 		<h3><a href="{{ photo.get_absolute_url }}">{{ photo.title }}</a></h3>
 		<p>{{ photo.description }}</p>
 		<dl>
 			<dt>taken</dt><dd>{{ photo.date_taken|date:"d.m.Y" }}</dd>
+			<dt>posted</dt><dd>{{ photo.date_posted|date:"d.m.Y" }}</dd>
 			<dt>tags</dt><dd>
 				<ul class="tags">
 					{% for tag in photo.tags.all %}
