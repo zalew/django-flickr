@@ -464,6 +464,7 @@ class PhotoSize(object):
     format_field = None
     source_suffix = None
     url_suffix = None
+    source_append = ''
 
     object = None
 
@@ -482,6 +483,7 @@ class PhotoSize(object):
                     'format_field': size.get('format_field', None),
                     'source_suffix': size.get('source_suffix', None),
                     'url_suffix': size.get('url_suffix', None),
+                    'source_append' : size.get('source_append', ''),
                     }
 
         def func(self, attr):
@@ -502,7 +504,7 @@ class PhotoSize(object):
             if self.object:
                 self._source = self.object.source
             if not self._source:
-                self._source = build_photo_source(self.photo.farm, self.photo.server, self.photo.flickr_id, self.secret, self.source_suffix, self.format)
+                self._source = build_photo_source(self.photo.farm, self.photo.server, self.photo.flickr_id, self.secret, self.source_suffix, self.format, self.source_append)
         return self._source
     source = property(_get_source)
 

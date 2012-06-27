@@ -11,7 +11,7 @@ References:
  * http://www.flickr.com/services/api/misc.urls.html
 """
 
-FLICKR_PHOTO_SOURCE = 'http://farm%(farm-id)s.staticflickr.com/%(server-id)s/%(photo-id)s_%(secret)s%(size_suffix)s.%(format)s'
+FLICKR_PHOTO_SOURCE = 'http://farm%(farm-id)s.staticflickr.com/%(server-id)s/%(photo-id)s_%(secret)s%(size_suffix)s.%(format)s%(append)s'
 FLICKR_PHOTO_URL_PAGE = 'http://www.flickr.com/photos/%(user-id)s/%(photo-id)s/'
 FLICKR_PHOTO_URL_PAGE_SIZES = 'http://www.flickr.com/photos/%(user-id)s/%(photo-id)s/sizes/%(size-suffix)s/'
 FLICKR_PHOTO_SHORT_URL = 'http://flic.kr/p/%(short-photo-id)s'
@@ -60,6 +60,7 @@ FLICKR_PHOTO_SIZES = {
                     'longest' : 640,
                     'source_suffix' : 'z',
                     'url_suffix' : 'z',
+                    'source_append' : '?zz=1',
                 },
     'Medium 800' : {'label' : 'medium800',
                     'longest' : 800,
@@ -93,7 +94,7 @@ def get_size_from_label(label):
         if label == size_item.get('label', None):
             return size_item
 
-def build_photo_source(farm_id, server_id, photo_id, secret, size_suffix = None, format='jpg'):
+def build_photo_source(farm_id, server_id, photo_id, secret, size_suffix = None, format='jpg', source_append=''):
     return FLICKR_PHOTO_SOURCE % {
                                 'farm-id':farm_id,
                                 'server-id':server_id,
@@ -101,6 +102,7 @@ def build_photo_source(farm_id, server_id, photo_id, secret, size_suffix = None,
                                 'secret':secret,
                                 'size_suffix': '' if not size_suffix else '_%s' % size_suffix,
                                 'format':format,
+                                'append' : source_append,
                                 }
 
 
