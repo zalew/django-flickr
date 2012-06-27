@@ -102,6 +102,7 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
             self.v('- got user info, it might take a while...', 1)
             if not options.get('test', False):
                 FlickrUser.objects.update_from_json(pk=flickr_user.pk, info=info)
+                self.flickr_user = FlickrUser.objects.get(pk=flickr_user.pk)
             else:
                 self.v('-- got data for user', 1)
         self.v('COMPLETE: user info sync', 0)
