@@ -23,7 +23,7 @@ class FlickrUserManager(models.Manager):
                      'photosurl': unslash(person.photosurl._content),
                      'profileurl': unslash(person.profileurl._content),
                      'mobileurl': unslash(person.mobileurl._content),
-                     #'last_sync': now(),
+                     'ispro': person.ispro,
                      }
         return self.filter(pk=pk).update(**dict(user_data.items() + kwargs.items()))
 
@@ -40,6 +40,7 @@ class FlickrUser(models.Model):
     iconserver = models.CharField(max_length=4, null=True, blank=True)
     iconfarm = models.PositiveSmallIntegerField(null=True, blank=True)
     path_alias = models.CharField(max_length=32, null=True, blank=True)
+    ispro = models.NullBooleanField()
 
     token = models.CharField(max_length=128, null=True, blank=True)
     perms = models.CharField(max_length=32, null=True, blank=True)

@@ -31,6 +31,7 @@ class FlickrModelTests(TestCase):
         FlickrUser.objects.update_from_json(self.flickr_user.id, json_user)
         fu = FlickrUser.objects.get(flickr_id=json_user['person']['id'])
         self.assertEqual(fu.flickr_id, json_user['person']['id'])
+        self.assertEqual(fu.ispro, json_user['person']['ispro'])
         self.assertEqual(fu.nsid, json_user['person']['nsid'])
         self.assertEqual(fu.realname, json_user['person']['realname']['_content'])
         self.assertEqual(fu.iconserver, json_user['person']['iconserver'])
