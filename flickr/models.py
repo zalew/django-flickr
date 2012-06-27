@@ -18,7 +18,7 @@ class FlickrUserManager(models.Manager):
     def update_from_json(self, pk, info, **kwargs):
         person = bunchify(info['person'])
         user_data = {'username': person.username._content, 'realname': person.realname._content,
-                     'flickr_id': person.id, 'nsid': person.nsid,
+                     'flickr_id': person.id, 'nsid': person.nsid, 'ispro': person.ispro,
                      'iconserver': person.iconserver, 'iconfarm': person.iconfarm, 'path_alias': person.path_alias,
                      'photosurl': unslash(person.photosurl._content),
                      'profileurl': unslash(person.profileurl._content),
@@ -557,6 +557,12 @@ for key, size in FLICKR_PHOTO_SIZES.items():
         setattr(Photo, '%s_%s' % (label, dato), property(get_property, set_property))
 
 
+def thumb(self):
+    return '<img src="%s"/>' % getattr(self, 'square_source')
+thumb.allow_tags = True
+setattr(Photo, 'thumbnail', thumb)
+
+
 class PhotoSetManager(models.Manager):
 
     def visible(self, *args, **kwargs):
@@ -646,6 +652,11 @@ class PhotoSet(FlickrModel):
             except Photo.DoesNotExist:
                 pass
 
+    def thumbnail(self):
+        if self.cover():
+            return '<img src="%s"/>' % self.cover().square_source
+    thumbnail.allow_tags = True
+
 
 class CollectionManager(models.Manager):
 
@@ -658,7 +669,7 @@ class CollectionManager(models.Manager):
         col = bunchify(info)
         data = {'flickr_id': col.id,
                 'title': col.title, 'description': col.description,
-                'parent': parent, 'last_sync': now(),
+                'parent': parent, 'last_sync': now(), 'icon': col.iconlarge,
                 }
         if flickr_user:
             data['user'] = flickr_user
@@ -738,6 +749,10 @@ class Collection(FlickrModel):
     @property
     def flickr_page_url(self):
         return '%scollections/%s/' % (self.user.flickr_page_url, (self.flickr_id.split('-')[-1]))
+
+    def thumbnail(self):
+        return '<img src="%s"/>' % self.icon.replace('_l.', '_s.')
+    thumbnail.allow_tags = True
 
 
 class JsonCache(models.Model):
