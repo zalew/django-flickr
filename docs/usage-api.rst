@@ -7,9 +7,7 @@ Using the API is easy. Here's an example authorized call to `flickr.people.getPh
 <https://secure.flickr.com/services/api/explore/flickr.people.getPhotos>`_. 
 
 .. code-block:: python
-   :linenos:
-
-   
+      
    from flickr.api import FlickrApi   
    
    FLICKR_KEY = getattr(settings, 'FLICKR_KEY', None)

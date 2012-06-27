@@ -154,17 +154,7 @@
   <div class="section" id="flickr-api">
 <span id="usage-api"></span><h1>Flickr API<a class="headerlink" href="#flickr-api" title="Permalink to this headline">¶</a></h1>
 <p>Using the API is easy. Here&#8217;s an example authorized call to <a class="reference external" href="https://secure.flickr.com/services/api/explore/flickr.people.getPhotos">flickr.people.getPhotos</a>.</p>
-<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">flickr.api</span> <span class="kn">import</span> <span class="n">FlickrApi</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">flickr.api</span> <span class="kn">import</span> <span class="n">FlickrApi</span>
 
 <span class="n">FLICKR_KEY</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s">&#39;FLICKR_KEY&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
 <span class="n">FLICKR_SECRET</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s">&#39;FLICKR_SECRET&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
@@ -176,7 +166,7 @@
 <span class="c"># Returns JSON by default. If you want XML:</span>
 <span class="n">api</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;people.getPhotos&#39;</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;xml&#39;</span><span class="p">)</span> <span class="c"># yep, also works without &#39;flickr.&#39;</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <p>Currently supports only read methods with GET. Writing with POST soon to be implemented.</p>
 </div>
 
