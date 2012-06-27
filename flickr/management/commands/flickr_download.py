@@ -78,7 +78,7 @@ class Command(FlickrCommand):
                     dphoto.image_file.save(os.path.basename(url), ContentFile(content), save=True)
                     #message += ' OK'
                 else:
-                    if response.url == 'http://l.yimg.com/g/images/photo_unavailable.gif':  # Flickr returns status code 200
+                    if response.url == 'http://l.yimg.com/g/images/photo_unavailable.gif':  # getcode() returns status 200
                         dphoto.errors = 'Size unavailable (' + url + ') ' + str(response.headers)
                         #TODO: what to do? what size fallback to?
                     else:
