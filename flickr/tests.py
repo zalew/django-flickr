@@ -124,7 +124,7 @@ class FlickrModelTests(TestCase):
         for size in size_bunch:
             self.assertEqual(unslash(size.source), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).source)
             self.assertEqual(unslash(size.url), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).url)
-        Photo.objects.update_from_json(flickr_id=photo.flickr_id, photo=json_info, sizes=json_sizes, exif=json_exif)
+        Photo.objects.update_from_json(flickr_id=photo.flickr_id, photo=json_info_photo, info=json_info, sizes=json_sizes, exif=json_exif)
         photo = Photo.objects.get(flickr_id=photo.flickr_id)
         self.assertEqual(photo.square_source, photo.square.source)
         self.assertEqual(photo.thumb_source, photo.thumb.source)
