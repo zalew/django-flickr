@@ -8,6 +8,96 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+        # Adding model 'PhotoSizeData'
+        db.create_table('flickr_photosizedata', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('photo', self.gf('django.db.models.fields.related.ForeignKey')(related_name='sizes', to=orm['flickr.Photo'])),
+            ('size', self.gf('django.db.models.fields.CharField')(max_length=10)),
+            ('width', self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True)),
+            ('height', self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True)),
+            ('source', self.gf('django.db.models.fields.URLField')(max_length=200, null=True, blank=True)),
+            ('url', self.gf('django.db.models.fields.URLField')(max_length=200, null=True, blank=True)),
+        ))
+        db.send_create_signal('flickr', ['PhotoSizeData'])
+
+        # Adding unique constraint on 'PhotoSizeData', fields ['photo', 'size']
+        db.create_unique('flickr_photosizedata', ['photo_id', 'size'])
+
+        # Deleting field 'Photo.thumb_source'
+        db.delete_column('flickr_photo', 'thumb_source')
+
+        # Deleting field 'Photo.medium_url'
+        db.delete_column('flickr_photo', 'medium_url')
+
+        # Deleting field 'Photo.ori_height'
+        db.delete_column('flickr_photo', 'ori_height')
+
+        # Deleting field 'Photo.large_url'
+        db.delete_column('flickr_photo', 'large_url')
+
+        # Deleting field 'Photo.square_source'
+        db.delete_column('flickr_photo', 'square_source')
+
+        # Deleting field 'Photo.square_height'
+        db.delete_column('flickr_photo', 'square_height')
+
+        # Deleting field 'Photo.square_url'
+        db.delete_column('flickr_photo', 'square_url')
+
+        # Deleting field 'Photo.medium_width'
+        db.delete_column('flickr_photo', 'medium_width')
+
+        # Deleting field 'Photo.large_source'
+        db.delete_column('flickr_photo', 'large_source')
+
+        # Deleting field 'Photo.large_width'
+        db.delete_column('flickr_photo', 'large_width')
+
+        # Deleting field 'Photo.large_height'
+        db.delete_column('flickr_photo', 'large_height')
+
+        # Deleting field 'Photo.small_source'
+        db.delete_column('flickr_photo', 'small_source')
+
+        # Deleting field 'Photo.square_width'
+        db.delete_column('flickr_photo', 'square_width')
+
+        # Deleting field 'Photo.thumb_width'
+        db.delete_column('flickr_photo', 'thumb_width')
+
+        # Deleting field 'Photo.small_width'
+        db.delete_column('flickr_photo', 'small_width')
+
+        # Deleting field 'Photo.thumb_height'
+        db.delete_column('flickr_photo', 'thumb_height')
+
+        # Deleting field 'Photo.ori_url'
+        db.delete_column('flickr_photo', 'ori_url')
+
+        # Deleting field 'Photo.small_url'
+        db.delete_column('flickr_photo', 'small_url')
+
+        # Deleting field 'Photo.thumb_url'
+        db.delete_column('flickr_photo', 'thumb_url')
+
+        # Deleting field 'Photo.ori_width'
+        db.delete_column('flickr_photo', 'ori_width')
+
+        # Deleting field 'Photo.medium_source'
+        db.delete_column('flickr_photo', 'medium_source')
+
+        # Deleting field 'Photo.small_height'
+        db.delete_column('flickr_photo', 'small_height')
+
+        # Deleting field 'Photo.medium_height'
+        db.delete_column('flickr_photo', 'medium_height')
+
+        # Deleting field 'Photo.ori_source'
+        db.delete_column('flickr_photo', 'ori_source')
+
+
+        # Changing field 'Photo.originalsecret'
+        db.alter_column('flickr_photo', 'originalsecret', self.gf('django.db.models.fields.CharField')(default='', max_length=10))
 
         # Changing field 'PhotoDownload.image_file'
         db.alter_column('flickr_photodownload', 'image_file', self.gf('django.db.models.fields.files.FileField')(max_length=100, null=True))
@@ -16,12 +106,141 @@ class Migration(SchemaMigration):
         db.alter_column('flickr_flickruser', 'last_sync', self.gf('django.db.models.fields.DateTimeField')(null=True))
 
     def backwards(self, orm):
+        # Removing unique constraint on 'PhotoSizeData', fields ['photo', 'size']
+        db.delete_unique('flickr_photosizedata', ['photo_id', 'size'])
+
+        # Deleting model 'PhotoSizeData'
+        db.delete_table('flickr_photosizedata')
+
+        # Adding field 'Photo.thumb_source'
+        db.add_column('flickr_photo', 'thumb_source',
+                      self.gf('django.db.models.fields.URLField')(max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.medium_url'
+        db.add_column('flickr_photo', 'medium_url',
+                      self.gf('django.db.models.fields.URLField')(max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.ori_height'
+        db.add_column('flickr_photo', 'ori_height',
+                      self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.large_url'
+        db.add_column('flickr_photo', 'large_url',
+                      self.gf('django.db.models.fields.URLField')(max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.square_source'
+        db.add_column('flickr_photo', 'square_source',
+                      self.gf('django.db.models.fields.URLField')(max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.square_height'
+        db.add_column('flickr_photo', 'square_height',
+                      self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.square_url'
+        db.add_column('flickr_photo', 'square_url',
+                      self.gf('django.db.models.fields.URLField')(max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.medium_width'
+        db.add_column('flickr_photo', 'medium_width',
+                      self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.large_source'
+        db.add_column('flickr_photo', 'large_source',
+                      self.gf('django.db.models.fields.URLField')(max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.large_width'
+        db.add_column('flickr_photo', 'large_width',
+                      self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.large_height'
+        db.add_column('flickr_photo', 'large_height',
+                      self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.small_source'
+        db.add_column('flickr_photo', 'small_source',
+                      self.gf('django.db.models.fields.URLField')(max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.square_width'
+        db.add_column('flickr_photo', 'square_width',
+                      self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.thumb_width'
+        db.add_column('flickr_photo', 'thumb_width',
+                      self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.small_width'
+        db.add_column('flickr_photo', 'small_width',
+                      self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.thumb_height'
+        db.add_column('flickr_photo', 'thumb_height',
+                      self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.ori_url'
+        db.add_column('flickr_photo', 'ori_url',
+                      self.gf('django.db.models.fields.URLField')(max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.small_url'
+        db.add_column('flickr_photo', 'small_url',
+                      self.gf('django.db.models.fields.URLField')(max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.thumb_url'
+        db.add_column('flickr_photo', 'thumb_url',
+                      self.gf('django.db.models.fields.URLField')(max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.ori_width'
+        db.add_column('flickr_photo', 'ori_width',
+                      self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.medium_source'
+        db.add_column('flickr_photo', 'medium_source',
+                      self.gf('django.db.models.fields.URLField')(max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.small_height'
+        db.add_column('flickr_photo', 'small_height',
+                      self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.medium_height'
+        db.add_column('flickr_photo', 'medium_height',
+                      self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'Photo.ori_source'
+        db.add_column('flickr_photo', 'ori_source',
+                      self.gf('django.db.models.fields.URLField')(max_length=255, null=True, blank=True),
+                      keep_default=False)
+
+
+        # Changing field 'Photo.originalsecret'
+        db.alter_column('flickr_photo', 'originalsecret', self.gf('django.db.models.fields.CharField')(max_length=10, null=True))
 
         # Changing field 'PhotoDownload.image_file'
         db.alter_column('flickr_photodownload', 'image_file', self.gf('django.db.models.fields.files.ImageField')(max_length=100, null=True))
 
-        # User chose to not deal with backwards NULL issues for 'FlickrUser.last_sync'
-        raise RuntimeError("Cannot reverse this migration. 'FlickrUser.last_sync' and its values cannot be restored.")
+        # Changing field 'FlickrUser.last_sync'
+        db.alter_column('flickr_flickruser', 'last_sync', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, auto_now_add=True, default=None))
 
     models = {
         'auth.group': {
@@ -126,37 +345,14 @@ class Migration(SchemaMigration):
             'isfamily': ('django.db.models.fields.NullBooleanField', [], {'null': 'True', 'blank': 'True'}),
             'isfriend': ('django.db.models.fields.NullBooleanField', [], {'null': 'True', 'blank': 'True'}),
             'ispublic': ('django.db.models.fields.NullBooleanField', [], {'null': 'True', 'blank': 'True'}),
-            'large_height': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'large_source': ('django.db.models.fields.URLField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'large_url': ('django.db.models.fields.URLField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'large_width': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'last_sync': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'auto_now_add': 'True', 'blank': 'True'}),
             'license': ('django.db.models.fields.CharField', [], {'default': '0', 'max_length': '50'}),
-            'medium_height': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'medium_source': ('django.db.models.fields.URLField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'medium_url': ('django.db.models.fields.URLField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'medium_width': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'ori_height': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'ori_source': ('django.db.models.fields.URLField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'ori_url': ('django.db.models.fields.URLField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'ori_width': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'originalformat': ('django.db.models.fields.CharField', [], {'max_length': '4', 'null': 'True', 'blank': 'True'}),
             'originalsecret': ('django.db.models.fields.CharField', [], {'max_length': '10'}),
             'secret': ('django.db.models.fields.CharField', [], {'max_length': '10'}),
             'server': ('django.db.models.fields.PositiveSmallIntegerField', [], {}),
             'show': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'small_height': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'small_source': ('django.db.models.fields.URLField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'small_url': ('django.db.models.fields.URLField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'small_width': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'square_height': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'square_source': ('django.db.models.fields.URLField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'square_url': ('django.db.models.fields.URLField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'square_width': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'thumb_height': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'thumb_source': ('django.db.models.fields.URLField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'thumb_url': ('django.db.models.fields.URLField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'thumb_width': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'url_page': ('django.db.models.fields.URLField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['flickr.FlickrUser']"})
@@ -187,6 +383,16 @@ class Migration(SchemaMigration):
             'show': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['flickr.FlickrUser']"})
+        },
+        'flickr.photosizedata': {
+            'Meta': {'unique_together': "(('photo', 'size'),)", 'object_name': 'PhotoSizeData'},
+            'height': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'photo': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'sizes'", 'to': "orm['flickr.Photo']"}),
+            'size': ('django.db.models.fields.CharField', [], {'max_length': '10'}),
+            'source': ('django.db.models.fields.URLField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
+            'url': ('django.db.models.fields.URLField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
+            'width': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'})
         },
         'taggit.tag': {
             'Meta': {'object_name': 'Tag'},

@@ -17,7 +17,7 @@ def get_token_for_user(user):
         return None
 
 
-def get_photos_json(nsid, token, page=1, per_page=500, min_upload_date=None, extras='description, license, date_upload, date_taken, owner_name, icon_server, original_format, last_update, geo, tags, machine_tags, o_dims, views, media, path_alias, url_sq, url_t, url_s, url_q, url_m, url_n, url_z, url_c, url_l, url_o'):
+def get_photos_json(nsid, token, page=1, per_page=500, min_upload_date=None, extras='description, license, date_upload, date_taken, owner_name, icon_server, original_format, last_update, geo, tags, machine_tags, o_dims, views, media, path_alias'):
     api = FlickrApi(FLICKR_KEY, FLICKR_SECRET, token)
     return bunchify(api.get(method='people.getPhotos', user_id=nsid, page=page, per_page=per_page, min_upload_date=min_upload_date, extras=extras))
 

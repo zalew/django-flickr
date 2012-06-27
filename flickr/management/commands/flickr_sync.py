@@ -21,28 +21,25 @@ class Command(FlickrCommand):
         make_option('--user', '-u', action='store', dest='user_id', default=1,
             help='Sync for a particular user. Default is 1 (in most cases it\'s the admin and you\'re using it only for yourself).'),
 
-        make_option('--initial', '-i', action='store_true', dest='initial', default=None,
-            help='Initial sync. For improved performance it assumpts db flickr tables are empty and blindly hits create().'),
-
         # Elements to sync
 
-        make_option('--info', action='store_true', dest='info', default=False,
-            help='Fetch info for photos. It will take a long time as it needs to fetch Flickr data for every photo separately.'),
+        make_option('--info', '-i', action='store_true', dest='info', default=False,
+            help='Fetch info for photos. It will take a long time to sync as it needs to fetch Flickr data for every photo separately.'),
 
-        make_option('--exif', action='store_true', dest='exif', default=False,
-            help='Fetch exif for photos. It will take a long time as it needs to fetch Flickr data for every photo separately.'),
+        make_option('--exif', '-e', action='store_true', dest='exif', default=False,
+            help='Fetch exif for photos. It will take a long time to sync as it needs to fetch Flickr data for every photo separately.'),
 
-        make_option('--sizes', action='store_true', dest='sizes', default=False,
+        make_option('--sizes', '-s', action='store_true', dest='sizes', default=False,
             help='Fetch sizes details for photos. It is not needed, sizes can be obtained dynanmically. \
 It will take a long time as it needs to fetch Flickr data for every photo separately. '),
 
-        make_option('--geo', action='store_true', dest='geo', default=False,
+        make_option('--geo', '-g', action='store_true', dest='geo', default=False,
             help='Fetch geo data for photos. It will take a long time as it needs to fetch Flickr data for every photo separately.'),
 
-        make_option('--photosets', action='store_true', dest='photosets', default=False,
+        make_option('--photosets', '-p', action='store_true', dest='photosets', default=False,
             help='Sync photosets. Photos must be synced first. If photo from photoset not in our db, it will be ommited.'),
 
-        make_option('--collections', action='store_true', dest='collections', default=False,
+        make_option('--collections', '-c', action='store_true', dest='collections', default=False,
             help='Sync collections. Photos and sets must be synced first.'),
 
         make_option('--no-photos', action='store_true', dest='no_photos', default=False,
@@ -60,7 +57,13 @@ It will take a long time as it needs to fetch Flickr data for every photo separa
             help='How many photos per page should we grab? Set low value (10-50) for daily/weekly updates so there is less to parse,\n\
 set high value (200-500) for initial sync and big updates so we hit flickr less.'),
 
-        # Debug
+        make_option('--ils', action='store_true', dest='ils', default=False,
+            help='Ignore last_sync.'),
+
+        # Other
+
+        make_option('--initial', action='store_true', dest='initial', default=None,
+            help='It assumpts db flickr tables are empty and blindly hits create().'),
 
         make_option('--test', '-t', action='store_true', dest='test', default=False,
             help='Test/simulate. Don\'t write results to db.'),
@@ -117,7 +120,8 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
             self.v('- fetching since last sync', 1)
             self.v('  (depending on the number of photos to sync it can take a while, be patient)', 1)
             self.v('  contacting Flickr...', 1)
-            min_upload_date = flickr_user.last_sync
+            if not options.get('ils'):
+                min_upload_date = flickr_user.last_sync
         photos = get_all_photos(nsid=flickr_user.nsid, token=flickr_user.token,
                         page=page, per_page=per_page, min_upload_date=min_upload_date)
         length = len(photos)

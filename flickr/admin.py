@@ -1,5 +1,5 @@
 from django.contrib import admin
-from flickr.models import Photo, FlickrUser, PhotoSet, Collection, PhotoDownload
+from flickr.models import Photo, FlickrUser, PhotoSet, Collection, PhotoDownload, PhotoSizeData
 
 
 class PhotoAdmin(admin.ModelAdmin):
@@ -53,3 +53,11 @@ class DownloadAdmin(admin.ModelAdmin):
     search_fields = ['photo__title', 'photo__flickr_id']
 
 admin.site.register(PhotoDownload, DownloadAdmin)
+
+
+class PhotoSizeDataAdmin(admin.ModelAdmin):
+    list_display = ('photo', 'size', 'source')
+    list_filter = ('size',)
+    search_fields = ['photo__title', 'photo__flickr_id']
+
+admin.site.register(PhotoSizeData, PhotoSizeDataAdmin)

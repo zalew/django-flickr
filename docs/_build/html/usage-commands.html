@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Management Commands &mdash; django-flickr 0.2.4 documentation</title>
+    <title>Management Commands &mdash; django-flickr 0.3.0 documentation</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -17,7 +17,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.2.4',
+        VERSION:     '0.3.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -27,7 +27,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/bootstrap.js"></script>
-    <link rel="top" title="django-flickr 0.2.4 documentation" href="index.html" />
+    <link rel="top" title="django-flickr 0.3.0 documentation" href="index.html" />
     <link rel="up" title="Usage" href="usage.html" />
     <link rel="next" title="Models" href="usage-models.html" />
     <link rel="prev" title="Introduction" href="usage-intro.html" />
@@ -98,7 +98,7 @@
     <div class="navbar-inner">
       <div class="container-fluid">
         <a class="brand" href="index.html">django-flickr</a>
-        <span class="navbar-text pull-left"><b>0.2.4</b></span>
+        <span class="navbar-text pull-left"><b>0.3.0</b></span>
           <ul class="nav">
             <li class="divider-vertical"></li>
             
@@ -165,33 +165,40 @@
 <h2>Sync photos database<a class="headerlink" href="#sync-photos-database" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><pre>./manage.py flickr_sync [options]</pre>
 </div>
-<div class="highlight-python"><pre>-i, --initial         Initial sync. For improved performance it assumpts db
-                      flickr tables are empty and blindly hits create().
--d DAYS, --days=DAYS  Sync photos from the last n days. Useful for cron
-                      jobs.
--u USER_ID, --user=USER_ID
+<div class="highlight-python"><pre>-u USER_ID, --user=USER_ID
                       Sync for a particular user. Default is 1 (in most
                       cases it's the admin and you're using it only for
                       yourself).
+-i, --info            Fetch info for photos. It will take a long time to
+                      sync as it needs to fetch Flickr data for every photo
+                      separately.
+-e, --exif            Fetch exif for photos. It will take a long time to
+                      sync as it needs to fetch Flickr data for every photo
+                      separately.
+-s, --sizes           Fetch sizes details for photos. It is not needed,
+                      sizes can be obtained dynanmically. It will take a
+                      long time as it needs to fetch Flickr data for every
+                      photo separately.
+-g, --geo             Fetch geo data for photos. It will take a long time as
+                      it needs to fetch Flickr data for every photo
+                      separately.
+-p, --photosets       Sync photosets. Photos must be synced first. If photo
+                      from photoset not in our db, it will be ommited.
+-c, --collections     Sync collections. Photos and sets must be synced
+                      first.
+--no-photos           Don't sync photos.
+-d DAYS, --days=DAYS  Sync photos from the last n days.
 --page=PAGE           Grab a specific portion of photos. To be used with
                       --per_page.
---per_page=PER_PAGE   How many photos per page should we grab? Set low value
+--per-page=PER_PAGE   How many photos per page should we grab? Set low value
                       (10-50) for daily/weekly updates so there is less to
                       parse, set high value (200-500) for initial sync and
                       big updates so we hit flickr less.
---force_update        If photo in db, override with new data.
---photosets           Sync photosets (only photosets, no photos sync action
-                      is run). Photos must be synced first. If photo from
-                      photoset not in our db, it will be ommited.
---collections         Sync collections. Photos and sets must be synced
-                      first.
---photos              Sync photos (only photos, no photosets sync action is
-                      run).
---update_photos       Update photos when updating a photoset.
---update_tags         Update tags when updating a photo.
+--ils                 Ignore last_sync.
+--initial             It assumpts db flickr tables are empty and blindly
+                      hits create().
 -t, --test            Test/simulate. Don't write results to db.</pre>
 </div>
-<p>Note: behavior soon to be changed (in 0.3.x releases) to simplify.</p>
 </div>
 <div class="section" id="download-photos">
 <h2>Download photos<a class="headerlink" href="#download-photos" title="Permalink to this headline">¶</a></h2>

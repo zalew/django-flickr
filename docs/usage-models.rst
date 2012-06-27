@@ -56,6 +56,14 @@ Selecting photos
    #(default True, you can hide photos from viewing on your website by setting it False
    Photo.objects.visible()
    
+   
+Image properties
+
+.. code-block:: python
+
+   TODO
+      
+   
 Some useful features
 
 .. code-block:: python
