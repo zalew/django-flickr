@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Django-Flickr 
+Django-Flickr
 =============
 
 `Django-Flickr
@@ -46,10 +46,10 @@ Contributors
 ------------
 
 * `Jakub Zalewski`_
-* `Javier García - Sogo`_
+* `Javier García Sogo`_
 
 .. _`Jakub Zalewski`: http://zalew.net
-.. _`Javier García - Sogo`: https://bitbucket.org/jgsogo/
+.. _`Javier García Sogo`: https://bitbucket.org/jgsogo/
 
 
 Bugs
