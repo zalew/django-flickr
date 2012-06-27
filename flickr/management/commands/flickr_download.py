@@ -3,12 +3,9 @@
 """
 Download all files from Flickr to disk (the ones in our synced DB'
 """
-from django.contrib.auth.models import User
-from django.core.files import File
 from django.core.files.base import ContentFile
-from django.core.management.base import CommandError
 from flickr.management.commands import FlickrCommand
-from flickr.models import FlickrUser, Photo, PhotoDownload
+from flickr.models import Photo, PhotoDownload
 from optparse import make_option
 import os
 import time
@@ -30,7 +27,7 @@ class Command(FlickrCommand):
         make_option('--public', '-p', action='store_true', dest='public', default=False,
             help='Only public photos.'),
 
-        make_option('--size', '-s', action='store_true', dest='size', default='ori',
+        make_option('--size', '-s', action='store_true', dest='size', default=None,
             help='Large instead of original (f.ex. for accounts with no access to original).'),
 
         make_option('--reset', '-r', action='store_true', dest='reset', default=False,
@@ -57,18 +54,23 @@ class Command(FlickrCommand):
         if not options.get('all'):
             photos = photos.exclude(id__in=[pd.photo.id for pd in PhotoDownload.objects.all()])
         length = len(photos)
-        i = ok = err = 0
+        i = err = 0
         for photo in photos:
             i += 1
             message = '.' * i
             size = options.get('size')
+            if not size:
+                if self.flickr_user.ispro:
+                    size = 'ori'
+                else:
+                    size = 'large'
             url = getattr(photo, size).source
             if not options.get('all'):
                 dphoto = PhotoDownload.objects.create(photo=photo)
             else:
                 dphoto, cr = PhotoDownload.objects.get_or_create(photo=photo)
             dphoto.url = url
-            dphoto.size = options.get('size')
+            dphoto.size = size
             try:
                 response = urllib2.urlopen(url)
                 if response.headers['content-type'] in ['image/jpeg', 'image/jpg']:
@@ -76,8 +78,13 @@ class Command(FlickrCommand):
                     dphoto.image_file.save(os.path.basename(url), ContentFile(content), save=True)
                     #message += ' OK'
                 else:
-                    dphoto.errors = 'Content-type wrong. ' + str(response.headers)
-                    #message += ' FAIL. check error log in db records\n'
+                    if response.url == 'http://l.yimg.com/g/images/photo_unavailable.gif':  # Flickr returns status code 200
+                        dphoto.errors = 'Size unavailable (' + url + ') ' + str(response.headers)
+                        #TODO: what to do? what size fallback to?
+                    else:
+                        dphoto.errors = 'Content-type wrong. ' + str(response.headers)
+                        #message += ' FAIL. check error log in db records\n'
+
             except Exception as e:
                 #message += str(e)
                 dphoto.errors = str(e)

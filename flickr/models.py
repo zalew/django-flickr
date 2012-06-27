@@ -40,6 +40,7 @@ class FlickrUser(models.Model):
     iconserver = models.CharField(max_length=4, null=True, blank=True)
     iconfarm = models.PositiveSmallIntegerField(null=True, blank=True)
     path_alias = models.CharField(max_length=32, null=True, blank=True)
+    ispro = models.NullBooleanField()
 
     token = models.CharField(max_length=128, null=True, blank=True)
     perms = models.CharField(max_length=32, null=True, blank=True)
@@ -129,52 +130,52 @@ class PhotoManager(models.Manager):
             """ With data returned from 'photos.getInfo' (no need of 'photo' dict)."""
             info_bunch = bunchify(info['photo'])
             photo_info = {
-                        'flickr_id' : info_bunch.id,
-                        'server' : info_bunch.server,
-                        'farm' : info_bunch.farm,
-                        'secret' : info_bunch.secret,
-                        'originalsecret' : getattr(info_bunch, 'originalsecret', ''),
-                        'originalformat' : getattr(info_bunch, 'originalformat', ''),
-                        'title' : info_bunch.title._content,
-                        'description' : info_bunch.description._content,
-                        'date_posted' : ts_to_dt(info_bunch.dates.posted),
-                        'date_taken' : info_bunch.dates.taken,
-                        'date_taken_granularity' : info_bunch.dates.takengranularity,
-                        'date_updated' : ts_to_dt(info_bunch.dates.lastupdate),
-                        'tags' : info_bunch.tags.tag,
-                        'ispublic' : info_bunch.visibility.ispublic,
-                        'isfriend' : info_bunch.visibility.isfriend,
-                        'isfamily' : info_bunch.visibility.isfamily,
-                        'license' : info_bunch.license,
+                        'flickr_id': info_bunch.id,
+                        'server': info_bunch.server,
+                        'farm': info_bunch.farm,
+                        'secret': info_bunch.secret,
+                        'originalsecret': getattr(info_bunch, 'originalsecret', ''),
+                        'originalformat': getattr(info_bunch, 'originalformat', ''),
+                        'title': info_bunch.title._content,
+                        'description': info_bunch.description._content,
+                        'date_posted': ts_to_dt(info_bunch.dates.posted),
+                        'date_taken': info_bunch.dates.taken,
+                        'date_taken_granularity': info_bunch.dates.takengranularity,
+                        'date_updated': ts_to_dt(info_bunch.dates.lastupdate),
+                        'tags': info_bunch.tags.tag,
+                        'ispublic': info_bunch.visibility.ispublic,
+                        'isfriend': info_bunch.visibility.isfriend,
+                        'isfamily': info_bunch.visibility.isfamily,
+                        'license': info_bunch.license,
                         }
             for url in info_bunch.urls.url:
                 if url.type == 'photopage':
                     photo_info['url_page'] = unslash(url._content)
         else:
             photo_info = {
-                        'flickr_id' : photo_bunch.id,
-                        'server' : photo_bunch.server,
-                        'farm' : photo_bunch.farm,
-                        'secret' : photo_bunch.secret,
-                        'originalsecret' : getattr(photo_bunch, 'originalsecret', ''),
-                        'originalformat' : getattr(photo_bunch, 'originalformat', ''),
-                        'title' : photo_bunch.title,
-                        'description' : getattr(getattr(photo_bunch, 'description', {}), '_content', ''),
-                        'date_posted' : ts_to_dt(getattr(photo_bunch, 'dateupload', '')),
-                        'date_taken' : getattr(photo_bunch, 'datetaken', ''),
-                        'date_taken_granularity' : getattr(photo_bunch, 'datetakengranularity', ''),
-                        'date_updated' : ts_to_dt(getattr(photo_bunch, 'lastupdate', '')),
-                        'tags' : getattr(photo_bunch, 'tags', ''),
-                        'ispublic' : photo_bunch.ispublic,
-                        'isfriend' : photo_bunch.isfriend,
-                        'isfamily' : photo_bunch.isfamily,
-                        'license' : photo_bunch.license,
+                        'flickr_id': photo_bunch.id,
+                        'server': photo_bunch.server,
+                        'farm': photo_bunch.farm,
+                        'secret': photo_bunch.secret,
+                        'originalsecret': getattr(photo_bunch, 'originalsecret', ''),
+                        'originalformat': getattr(photo_bunch, 'originalformat', ''),
+                        'title': photo_bunch.title,
+                        'description': getattr(getattr(photo_bunch, 'description', {}), '_content', ''),
+                        'date_posted': ts_to_dt(getattr(photo_bunch, 'dateupload', '')),
+                        'date_taken': getattr(photo_bunch, 'datetaken', ''),
+                        'date_taken_granularity': getattr(photo_bunch, 'datetakengranularity', ''),
+                        'date_updated': ts_to_dt(getattr(photo_bunch, 'lastupdate', '')),
+                        'tags': getattr(photo_bunch, 'tags', ''),
+                        'ispublic': photo_bunch.ispublic,
+                        'isfriend': photo_bunch.isfriend,
+                        'isfamily': photo_bunch.isfamily,
+                        'license': photo_bunch.license,
                         }
 
         photo_data.update(photo_info)
 
         if flickr_user:
-            photo_data.update({'user' : flickr_user})
+            photo_data.update({'user': flickr_user})
 
         if exif:
             """ Exif data can only come from 'photos.getExif' """
@@ -201,17 +202,17 @@ class PhotoManager(models.Manager):
             """ Geo data can come from 'photos.getGeo' """
             try:
                 geo_data = {
-                    'geo_latitude' : geo['photo']['location']['latitude'],
-                    'geo_longitude' : geo['photo']['location']['longitude'],
-                    'geo_accuracy' : geo['photo']['location']['accuracy'],
+                    'geo_latitude': geo['photo']['location']['latitude'],
+                    'geo_longitude': geo['photo']['location']['longitude'],
+                    'geo_accuracy': geo['photo']['location']['accuracy'],
                     }
-            except: # \todo TBD: not really tested
+            except:  # \todo TBD: not really tested
                 geo_data = {}
         else:
             geo_data = {
-                'geo_latitude' : getattr(photo_bunch, 'latitude', ''),
-                'geo_longitude' : getattr(photo_bunch, 'longitude', ''),
-                'geo_accuracy' : getattr(photo_bunch, 'accuracy', ''),
+                'geo_latitude': getattr(photo_bunch, 'latitude', ''),
+                'geo_longitude': getattr(photo_bunch, 'longitude', ''),
+                'geo_accuracy': getattr(photo_bunch, 'accuracy', ''),
                 }
         photo_data.update(geo_data)
         return photo_data
@@ -261,7 +262,7 @@ class PhotoManager(models.Manager):
                 obj.tags.clear()
                 self._add_tags(obj, tags)
             if kwargs.get('update_sizes', False):
-                obj.sizes.clear() # Delete all sizes or only update them?
+                obj.sizes.clear()  # Delete all sizes or only update them?
                 self._add_sizes(obj, photo, sizes)
         return result
 
@@ -760,7 +761,7 @@ class PhotoDownload(models.Model):
     photo = models.OneToOneField(Photo)
     url = models.URLField(max_length=255, null=True, blank=True)
     image_file = models.FileField(upload_to=upload_path, null=True, blank=True)
-    size = models.CharField(max_length = 10, choices = [(v['label'], k) for k,v in FLICKR_PHOTO_SIZES.iteritems()])
+    size = models.CharField(max_length=10, choices=[(v['label'], k) for k, v in FLICKR_PHOTO_SIZES.iteritems()])
     errors = models.TextField(null=True, blank=True)
     date_downloaded = models.DateTimeField(auto_now=True, auto_now_add=True)
 
