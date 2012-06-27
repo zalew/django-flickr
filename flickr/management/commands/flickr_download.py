@@ -28,7 +28,7 @@ class Command(FlickrCommand):
             help='Only public photos.'),
 
         make_option('--size', '-s', action='store_true', dest='size', default=None,
-            help='Large instead of original (f.ex. for accounts with no access to original).'),
+            help='Specify size for download (by default original for pro accounts and large for non-pro).'),
 
         make_option('--reset', '-r', action='store_true', dest='reset', default=False,
             help='Clear downloads db table. Does not affect your files.'),

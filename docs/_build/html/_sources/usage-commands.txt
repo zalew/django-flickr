@@ -67,9 +67,10 @@ Download photos
                         downloaded (default behavior). Use this option to
                         (re)download all.
   -p, --public          Only public photos.
-  -l, --large           Large instead of original (f.ex. for accounts with no
-                        access to original).
+  -s, --size            Specify size for download (by default original for pro
+                        accounts and large for non-pro).
   -r, --reset           Clear downloads db table. Does not affect your files.
+
 
 Photos are downloaded under your MEDIA folder. Default settings you can override:
 
