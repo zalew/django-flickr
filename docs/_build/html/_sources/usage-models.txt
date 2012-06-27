@@ -62,7 +62,7 @@ Photo properties
 ~~~~~~~~~~~~~~~~~~~
 
 Accessing properties of each photo is independent of the way you used to sync
-them (check options in `Sync photos database`_), although some attributes may
+them (check options in :ref:`usage-commands`), although some attributes may
 not be available if you didn't sync your photos with the corresponding options.
 The syntax is always the same:
 
@@ -94,7 +94,7 @@ The syntax is always the same:
 **Photo source** and **photo url web page** are either retrieved from the synced
 data in the database (if ``--sizes`` option was used) or dynamically generated
 (according to `Flickr docs <http://www.flickr.com/services/api/misc.urls.html>`_,
-so this will always return a valid url for all **web sizes** (see `issue #[to be opened] <#>`_).
+so this will always return a valid url for all **web sizes** (see `issue #20 <https://bitbucket.org/zalew/django-flickr/issue/20/photo-unavailable-hotlinks-for-certain>`_).
 
 .. code-block:: python
    :linenos:

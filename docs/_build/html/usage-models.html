@@ -230,7 +230,7 @@
 <div class="section" id="photo-properties">
 <h3>Photo properties<a class="headerlink" href="#photo-properties" title="Permalink to this headline">¶</a></h3>
 <p>Accessing properties of each photo is independent of the way you used to sync
-them (check options in <a href="#id1"><span class="problematic" id="id2">`Sync photos database`_</span></a>), although some attributes may
+them (check options in <a class="reference internal" href="usage-commands.html#usage-commands"><em>Management Commands</em></a>), although some attributes may
 not be available if you didn&#8217;t sync your photos with the corresponding options.
 The syntax is always the same:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="n">photo_object</span><span class="p">)</span><span class="o">.</span><span class="p">(</span><span class="n">size_label</span><span class="p">)</span><span class="o">.</span><span class="p">(</span><span class="nb">property</span><span class="p">)</span>
@@ -257,7 +257,7 @@ property         - source: url to image source.
 <p><strong>Photo source</strong> and <strong>photo url web page</strong> are either retrieved from the synced
 data in the database (if <tt class="docutils literal"><span class="pre">--sizes</span></tt> option was used) or dynamically generated
 (according to <a class="reference external" href="http://www.flickr.com/services/api/misc.urls.html">Flickr docs</a>,
-so this will always return a valid url for all <strong>web sizes</strong> (see <a class="reference external" href="#">issue #[to be opened]</a>).</p>
+so this will always return a valid url for all <strong>web sizes</strong> (see <a class="reference external" href="https://bitbucket.org/zalew/django-flickr/issue/20/photo-unavailable-hotlinks-for-certain">issue #20</a>).</p>
 <div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
 3</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">p</span> <span class="o">=</span> <span class="n">Photo</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
