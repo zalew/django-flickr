@@ -12,4 +12,4 @@ def flickr_photo(photo, size='medium', flickr_link=False):
             size = 'ori'
         else:
             size = 'medium640'
-    return {'photo': photo, 'size': size, 'flickr_link': flickr_link, }
+    return {'photo': photo, 'size': size, 'flickr_link': flickr_link, 'photo_size': getattr(photo, size)}
