@@ -253,12 +253,13 @@ class PhotoManager(models.Manager):
 
     def update_from_json(self, flickr_id, photo, info=None, sizes=None, exif=None, geo=None, **kwargs):
         """Update a record with flickr_id"""
+        update_tags = kwargs.pop('update_tags', False)
         photo_data = self._prepare_data(photo=photo, info=info, exif=exif, geo=geo, **kwargs)
         tags = photo_data.pop('tags')
         result = self.filter(flickr_id=flickr_id).update(**dict(photo_data.items() + kwargs.items()))
         if result == 1:
             obj = self.get(flickr_id=flickr_id)
-            if kwargs.get('update_tags', False):
+            if update_tags:
                 obj.tags.clear()
                 self._add_tags(obj, tags)
             if kwargs.get('update_sizes', False):
