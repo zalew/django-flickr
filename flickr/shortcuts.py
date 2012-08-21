@@ -8,6 +8,7 @@ import time
 FLICKR_KEY = getattr(settings, 'FLICKR_KEY', None)
 FLICKR_SECRET = getattr(settings, 'FLICKR_SECRET', None)
 
+ALL_EXTRAS = 'description, license, date_upload, date_taken, owner_name, icon_server, original_format, last_update, geo, tags, machine_tags, o_dims, views, media, path_alias'
 
 def get_token_for_user(user):
     try:
@@ -17,13 +18,13 @@ def get_token_for_user(user):
         return None
 
 
-def get_photos_json(nsid, token, page=1, per_page=500, min_upload_date=None, extras='description, license, date_upload, date_taken, owner_name, icon_server, original_format, last_update, geo, tags, machine_tags, o_dims, views, media, path_alias'):
+def get_photos_json(nsid, token, page=1, per_page=500, min_upload_date=None, extras=None):
     api = FlickrApi(FLICKR_KEY, FLICKR_SECRET, token)
     return bunchify(api.get(method='people.getPhotos', user_id=nsid, page=page, per_page=per_page, min_upload_date=min_upload_date, extras=extras))
 
 
-def get_all_photos(nsid, token, page=None, per_page=None, min_upload_date=None):
-    data = get_photos_json(nsid, token, page, per_page, min_upload_date)
+def get_all_photos(nsid, token, page=None, per_page=None, min_upload_date=None, extras=None):
+    data = get_photos_json(nsid, token, page, per_page, min_upload_date, extras)
     user_photos = data.photos
     #per_page = user_photos.perpage
     #page = user_photos.page
@@ -33,7 +34,7 @@ def get_all_photos(nsid, token, page=None, per_page=None, min_upload_date=None):
     if pages > 1 and not page:
         for page in range(2, pages + 1):
             time.sleep(1)
-            data = get_photos_json(nsid, token, page, per_page)
+            data = get_photos_json(nsid, token, page, per_page, extras)
             photos += data.photos.photo
     if not page and len(photos) != total:
         raise Exception, "Photos number don't match (%d != %d)" % (len(photos), total)

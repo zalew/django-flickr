@@ -69,7 +69,7 @@ class FlickrModel(models.Model):
     flickr_id = models.CharField(unique=True, db_index=True, max_length=50)
     user = models.ForeignKey(FlickrUser)
     show = models.BooleanField(default=True)  # #show the photo on your page?
-    last_sync = models.DateTimeField(auto_now=True, auto_now_add=True)
+    last_sync = models.DateTimeField(blank=True, null=True, editable=False)
 
     class Meta:
         abstract = True
@@ -126,6 +126,9 @@ class PhotoManager(models.Manager):
         """
         photo_bunch = bunchify(photo)
         photo_data = {}
+        if info and exif and geo:
+            """ Update last_sync only if all the info is retrieved from flickr """
+            photo_data.update({'last_sync' : now()})
         if info:
             """ With data returned from 'photos.getInfo' (no need of 'photo' dict)."""
             info_bunch = bunchify(info['photo'])
