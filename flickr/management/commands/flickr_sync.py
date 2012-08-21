@@ -200,7 +200,7 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
         if options.get('no_photos', False):
             """ If caller hasn't choose a subset, update (no creation) all photos' date_updated field """
             self.v('- getting user photos list...', 1)
-            opts = {'page':options.get('page'), 'per-page':options.get('per-page'), 'ils':True}
+            opts = {'page':options.get('page'), 'per_page':options.get('per_page'), 'ils':True}
             photos = self._get_photo_subset(extras='last_update', **opts)
             self.v('- got %d photos...' % len(photos), 1)
             for photo in photos:

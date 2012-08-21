@@ -34,7 +34,7 @@ def get_all_photos(nsid, token, page=None, per_page=None, min_upload_date=None, 
     if pages > 1 and not page:
         for page in range(2, pages + 1):
             time.sleep(1)
-            data = get_photos_json(nsid, token, page, per_page, extras)
+            data = get_photos_json(nsid, token, page, per_page, extras=extras)
             photos += data.photos.photo
     if not page and len(photos) != total:
         raise Exception, "Photos number don't match (%d != %d)" % (len(photos), total)
