@@ -129,7 +129,7 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
             if not options.get('ils'):
                 min_upload_date = flickr_user.last_sync
         #extras = extras or ALL_EXTRAS
-        # Overriden util PhotoManager._prepare_data look up for extras.
+        # \todo Overriden util PhotoManager._prepare_data look up for extras.
         extras = ALL_EXTRAS
         photos = get_all_photos(nsid=flickr_user.nsid, token=flickr_user.token,
                         page=page, per_page=per_page, min_upload_date=min_upload_date, extras=extras)
@@ -197,22 +197,23 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
     def update_photos(self, **options):
         flickr_user = self.flickr_user
         self.v('Updating user photos', 0)
-        if options.get('no_photos', False):
-            """ If caller hasn't choose a subset, update (no creation) all photos' date_updated field """
-            self.v('- getting user photos list...', 1)
-            opts = {'page':options.get('page'), 'per_page':options.get('per_page'), 'ils':True}
-            photos = self._get_photo_subset(extras='last_update', **opts)
-            self.v('- got %d photos...' % len(photos), 1)
-            for photo in photos:
-                self.v('- processing photo #%s "%s"' % (photo.id, photo.title), 2)
-                if not options.get('test', False):
-                    Photo.objects.update_from_json(flickr_id=photo.id, photo=photo)
 
+        """ Update (no creation) all photos in database to get last_updated date """
+        self.v('- updating user photos list...', 1)
+        opts = {'page':options.get('page'), 'per_page':options.get('per_page'), 'ils':True}
+        photos = self._get_photo_subset(extras='last_update', **opts)
+        self.v('- got %d photos...' % len(photos), 1)
+        for photo in photos:
+            self.v('- processing photo #%s "%s"' % (photo.id, photo.title), 2)
+            if not options.get('test', False):
+                Photo.objects.update_from_json(flickr_id=photo.id, photo=photo)
+
+        """ Update info for outdated photos """
         self.v('- getting user photos list to update...', 1)
         photos = Photo.objects.filter(models.Q(last_sync=None) | models.Q(date_updated__gte=models.F('last_sync')))
-        self.v('- got %d photos, it might take a while...' % len(photos), 1)
         length = len(photos)
         if length > 0:
+            self.v('- got %d photos, it might take a while...' % len(photos), 1)
             for photo in photos:
                 try:
                     self.v('- processing photo #%s "%s"' % (photo.flickr_id, photo.title), 2)
