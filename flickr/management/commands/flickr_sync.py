@@ -49,6 +49,9 @@ It will take a long time as it needs to fetch Flickr data for every photo separa
         make_option('--update-photos', action='store_true', dest='update_photos', default=False,
             help='Update outdated photos. It will take a long time as it needs to fetch Flickr several times per photo.'),
 
+        make_option('--update-tags', action='store_true', dest='update_tags', default=False,
+            help='Update tags in photos.'),
+
         # Range to sync
 
         make_option('--days', '-d', action='store', dest='days', default=None,
