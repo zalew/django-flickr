@@ -210,7 +210,7 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
         flickr_user = self.flickr_user
         self.v('Syncing collections', 0)
         tree = get_collections_tree_json(nsid=flickr_user.nsid, token=flickr_user.token)
-        length = len(tree)
+        length = len(tree['collections'])
         if length > 0:
             self.v('- got %d collections in root of tree for user' % length, 1)
             if not options.get('test', False):
