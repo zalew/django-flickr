@@ -7,6 +7,8 @@ register = template.Library()
 
 @register.inclusion_tag("flickr/photo.html")
 def flickr_photo(photo, size='medium', flickr_link=False):
+    if not photo:
+        return {}
     if size == 'large' and photo.date_posted <= datetime.datetime(2010, 05, 25):
         if photo.user.ispro:
             size = 'ori'
