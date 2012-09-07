@@ -176,7 +176,7 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
                                 Photo.objects.create_from_json(flickr_user=flickr_user, photo=photo, info=info, sizes=sizes, exif=exif, geo=geo)
                             else:
                                 self.v(' - updating db', 2)
-                                Photo.objects.update_from_json(flickr_id=photo.id, photo=photo, info=info, sizes=sizes, exif=exif, geo=geo, update_tags=options.get('update_tags', False))
+                                Photo.objects.update_from_json(flickr_user=flickr_user, flickr_id=photo.id, photo=photo, info=info, sizes=sizes, exif=exif, geo=geo, update_tags=options.get('update_tags', False))
                     else:
                         self.v(' - it\'s a test, so not writing to db', 2)
                 except Exception as e:
@@ -209,7 +209,7 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
         for photo in photos:
             self.v('- processing photo #%s "%s"' % (photo.id, photo.title), 2)
             if not options.get('test', False):
-                Photo.objects.update_from_json(flickr_id=photo.id, photo=photo)
+                Photo.objects.update_from_json(flickr_user=flickr_user, flickr_id=photo.id, photo=photo)
 
         """ Update info for outdated photos """
         self.v('- getting user photos list to update...', 1)
@@ -225,7 +225,7 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
                     geo = get_photo_geo_json(photo_id=photo.flickr_id, token=flickr_user.token)
                     sizes = None
                     if not options.get('test', False):
-                        Photo.objects.update_from_json(flickr_id=photo.flickr_id, photo=None, info=info, sizes=sizes, exif=exif, geo=geo, update_tags=options.get('update_tags', False))
+                        Photo.objects.update_from_json(flickr_user=flickr_user, flickr_id=photo.flickr_id, photo=None, info=info, sizes=sizes, exif=exif, geo=geo, update_tags=options.get('update_tags', False))
                     else:
                         self.v(' - it\'s a test, so not writing to db', 2)
                 except Exception as e:
@@ -260,7 +260,7 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
                         if not PhotoSet.objects.filter(flickr_id=s.id):
                             PhotoSet.objects.create_from_json(flickr_user=flickr_user, info=s, photos=photos)
                         else:
-                            PhotoSet.objects.update_from_json(flickr_id=s.id, info=s, photos=photos, update_photos=options.get('update_photos', False))
+                            PhotoSet.objects.update_from_json(flickr_user=flickr_user, flickr_id=s.id, info=s, photos=photos, update_photos=options.get('update_photos', False))
                 i += 1
                 if i % 10 == 0:
                     self.v('- %d photosets fetched, %d to go' % (i, length - i), 1)
@@ -273,7 +273,7 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
         flickr_user = self.flickr_user
         self.v('Syncing collections', 0)
         tree = get_collections_tree_json(nsid=flickr_user.nsid, token=flickr_user.token)
-        length = len(tree)
+        length = len(tree['collections'])
         if length > 0:
             self.v('- got %d collections in root of tree for user' % length, 1)
             if not options.get('test', False):

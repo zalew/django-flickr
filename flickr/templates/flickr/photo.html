@@ -1,3 +1,5 @@
+{% if photo %}
 {% if flickr_link %}<a href="{{ photo.flickr_page_url }}">{% endif %}
 <img src="{{ photo_size.source }}" width="{{ photo_size.width }}" height="{{ photo_size.height }}" alt="{{ photo.title }}" title="{{ photo.title }}" />
 {% if flickr_link %}</a>{% endif %}
+{% endif %}
