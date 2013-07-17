@@ -13,6 +13,7 @@ Project links
 
  * builds: http://pypi.python.org/pypi/django-flickr/
  * repository: https://bitbucket.org/zalew/django-flickr/
+ * mirror: https://github.com/zalew/django-flickr/
 
 
  **Meta**
