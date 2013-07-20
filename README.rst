@@ -17,26 +17,19 @@ into a Django project.
 Project links
 -------------
 
- **Source**
+**Source**
 
- * builds: http://pypi.python.org/pypi/django-flickr/
- * repository: https://bitbucket.org/zalew/django-flickr/
- * mirror: https://github.com/zalew/django-flickr/
-
-
- **Meta**
-
- * docs: http://readthedocs.org/docs/django-flickr/en/latest/
- * bugs, feature requests: https://bitbucket.org/zalew/django-flickr/issues
- * roadmap, release log: https://bitbucket.org/zalew/django-flickr/wiki
+* builds: http://pypi.python.org/pypi/django-flickr/
+* repository: https://bitbucket.org/zalew/django-flickr/
+* mirror: https://github.com/zalew/django-flickr/
 
 
-Contributors
-------------
+**Meta**
 
-* `Jakub Zalewski`_
-* `Javier García - Sogo`_
+* docs: http://readthedocs.org/docs/django-flickr/en/latest/
+* bugs, feature requests: https://bitbucket.org/zalew/django-flickr/issues
+* roadmap, release log: https://bitbucket.org/zalew/django-flickr/wiki
+* license: BSD, see LICENSE file
+* contributors: see AUTHORS file
 
-.. _`Jakub Zalewski`: http://zalew.net
-.. _`Javier García - Sogo`: https://bitbucket.org/jgsogo/
 
