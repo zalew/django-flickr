@@ -1,0 +1,21 @@
+stages:
+  - build
+  - test
+
+before_script:
+  - pip install tox
+
+build:
+  image: python:2.7
+  stage: build
+  script:
+    - python setup.py sdist bdist_wheel --universal
+    - echo "What's in the package?"
+    - tar -tvf dist/django-flickr-*tar.gz
+    - unzip -l dist/django_flickr-*whl
+
+test-py27:
+  image: python:2.7
+  stage: test
+  script:
+    - tox -e $(tox -ls | grep py27 | sed -e 'N;s/\n/,/')

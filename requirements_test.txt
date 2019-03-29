@@ -1,0 +1,4 @@
+pytest<4
+pytest-cov
+django-test-plus==1.0.15
+pytest-django<3.0
