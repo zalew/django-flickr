@@ -23,6 +23,7 @@ class FlickrUserManager(models.Manager):
                      'photosurl': unslash(person.photosurl._content),
                      'profileurl': unslash(person.profileurl._content),
                      'mobileurl': unslash(person.mobileurl._content),
+                     'tzoffset' : person.timezone.offset,
                      #'last_sync': now(),
                      }
         return self.filter(pk=pk).update(**dict(user_data.items() + kwargs.items()))
@@ -41,6 +42,7 @@ class FlickrUser(models.Model):
     iconfarm = models.PositiveSmallIntegerField(null=True, blank=True)
     path_alias = models.CharField(max_length=32, null=True, blank=True)
     ispro = models.NullBooleanField()
+    tzoffset = models.CharField(max_length=6, null=True, blank=True)
 
     token = models.CharField(max_length=128, null=True, blank=True)
     perms = models.CharField(max_length=32, null=True, blank=True)
@@ -111,7 +113,7 @@ class PhotoManager(models.Manager):
     def public(self, *args, **kwargs):
         return self.visible(ispublic=1, *args, **kwargs)
 
-    def _prepare_data(self, photo, info=None, flickr_user=None, exif=None, geo=None, **kwargs):
+    def _prepare_data(self, photo, flickr_user, info=None, exif=None, geo=None, **kwargs):
         """
         Returns a dict with all information related to a photo. As some info
         can be in several parameters, it returns data from the most especific
@@ -138,10 +140,10 @@ class PhotoManager(models.Manager):
                         'originalformat': getattr(info_bunch, 'originalformat', ''),
                         'title': info_bunch.title._content,
                         'description': info_bunch.description._content,
-                        'date_posted': ts_to_dt(info_bunch.dates.posted),
-                        'date_taken': info_bunch.dates.taken,
+                        'date_posted': ts_to_dt(info_bunch.dates.posted, flickr_user.tzoffset),
+                        'date_taken': '%s%s' % (info_bunch.dates.taken, flickr_user.tzoffset),
                         'date_taken_granularity': info_bunch.dates.takengranularity,
-                        'date_updated': ts_to_dt(info_bunch.dates.lastupdate),
+                        'date_updated': ts_to_dt(info_bunch.dates.lastupdate, flickr_user.tzoffset),
                         'tags': info_bunch.tags.tag,
                         'ispublic': info_bunch.visibility.ispublic,
                         'isfriend': info_bunch.visibility.isfriend,
@@ -161,16 +163,18 @@ class PhotoManager(models.Manager):
                         'originalformat': getattr(photo_bunch, 'originalformat', ''),
                         'title': photo_bunch.title,
                         'description': getattr(getattr(photo_bunch, 'description', {}), '_content', ''),
-                        'date_posted': ts_to_dt(getattr(photo_bunch, 'dateupload', '')),
+                        'date_posted': ts_to_dt(getattr(photo_bunch, 'dateupload', ''), flickr_user.tzoffset),
                         'date_taken': getattr(photo_bunch, 'datetaken', ''),
                         'date_taken_granularity': getattr(photo_bunch, 'datetakengranularity', ''),
-                        'date_updated': ts_to_dt(getattr(photo_bunch, 'lastupdate', '')),
+                        'date_updated': ts_to_dt(getattr(photo_bunch, 'lastupdate', ''), flickr_user.tzoffset),
                         'tags': getattr(photo_bunch, 'tags', ''),
                         'ispublic': photo_bunch.ispublic,
                         'isfriend': photo_bunch.isfriend,
                         'isfamily': photo_bunch.isfamily,
                         'license': photo_bunch.license,
                         }
+            if photo_info['date_taken']:
+                photo_info['date_taken'] = '%s%s' % (photo_info['date_taken'], flickr_user.tzoffset)
 
         photo_data.update(photo_info)
 
@@ -251,10 +255,10 @@ class PhotoManager(models.Manager):
         self._add_sizes(obj, photo, sizes)
         return obj
 
-    def update_from_json(self, flickr_id, photo, info=None, sizes=None, exif=None, geo=None, **kwargs):
+    def update_from_json(self, flickr_user, flickr_id, photo, info=None, sizes=None, exif=None, geo=None, **kwargs):
         """Update a record with flickr_id"""
         update_tags = kwargs.pop('update_tags', False)
-        photo_data = self._prepare_data(photo=photo, info=info, exif=exif, geo=geo, **kwargs)
+        photo_data = self._prepare_data(photo=photo, flickr_user=flickr_user, info=info, exif=exif, geo=geo, **kwargs)
         tags = photo_data.pop('tags')
         result = self.filter(flickr_id=flickr_id).update(**dict(photo_data.items() + kwargs.items()))
         if result == 1:
@@ -579,14 +583,14 @@ class PhotoSetManager(models.Manager):
             except Exception as e:
                 pass
 
-    def _prepare_data(self, info, photos, flickr_user=None, exif=None, geo=None):
+    def _prepare_data(self, info, photos, flickr_user, exif=None, geo=None):
         photoset = bunchify(info)
         photos = bunchify(photos['photoset']['photo'])
 
         data = {'flickr_id': photoset.id, 'server': photoset.server,
                   'secret': photoset.secret, 'farm': photoset.farm, 'primary': photoset.primary,
                   'title': photoset.title._content, 'description': photoset.description._content,
-                  'date_posted': ts_to_dt(photoset.date_create), 'date_updated': ts_to_dt(photoset.date_update),
+                  'date_posted': ts_to_dt(photoset.date_create, flickr_user.tzoffset), 'date_updated': ts_to_dt(photoset.date_update, flickr_user.tzoffset),
                   'photos': photos,
                   'last_sync': now(),
                   }
@@ -594,9 +598,9 @@ class PhotoSetManager(models.Manager):
             data['user'] = flickr_user
         return data
 
-    def update_from_json(self, flickr_id, info, photos, update_photos=False, **kwargs):
+    def update_from_json(self, flickr_user, flickr_id, info, photos, update_photos=False, **kwargs):
         """Update a record with flickr_id"""
-        photoset_data = self._prepare_data(info=info, photos=photos, **kwargs)
+        photoset_data = self._prepare_data(info=info, photos=photos, flickr_user=flickr_user, **kwargs)
         photos = photoset_data.pop('photos')
         result = self.filter(flickr_id=flickr_id).update(**dict(photoset_data.items() + kwargs.items()))
         if result == 1 and update_photos:
@@ -668,7 +672,7 @@ class CollectionManager(models.Manager):
         flickr_sets = PhotoSet.objects.filter(flickr_id__in=[s.id for s in sets])
         obj.sets.add(*[s.id for s in flickr_sets])
 
-    def _prepare_data(self, info, parent=None, flickr_user=None):
+    def _prepare_data(self, info, flickr_user, parent=None):
         col = bunchify(info)
         data = {'flickr_id': col.id,
                 'title': col.title, 'description': col.description,
@@ -677,7 +681,7 @@ class CollectionManager(models.Manager):
         if flickr_user:
             data['user'] = flickr_user
         if 'date_create' in col.keys():
-            data['date_created'] = ts_to_dt(col.date_create)
+            data['date_created'] = ts_to_dt(col.date_create, flickr_user.tzoffset)
         if 'set' in col.keys():
             data['sets'] = col.set
         if 'collection' in col.keys():
