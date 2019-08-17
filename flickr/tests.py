@@ -195,3 +195,8 @@ class FlickrModelTests(TestCase):
         self.assertTrue("flickr/index.html" in [tmpl.name for tmpl in response.templates])
         self.assertTrue(photoset.title in response.content)
         self.assertTrue(photo.description in response.content)
+
+    def test_imports(self):
+        import flickr.admin
+        import flickr.management.commands.flickr_download
+        import flickr.management.commands.flickr_sync
