@@ -74,7 +74,7 @@ class FlickrModelTests(TestCase):
         new_title = 'whoa that is a new title here'
         json_info['title'] = new_title
         self.assertNotEqual(photo.title, json_info['title'])
-        Photo.objects.update_from_json(flickr_id=photo.flickr_id, photo=json_info, sizes=json_sizes, exif=json_exif)
+        Photo.objects.update_from_json(self.flickr_user, flickr_id=photo.flickr_id, photo=json_info, sizes=json_sizes, exif=json_exif)
         obj = Photo.objects.get(flickr_id=photo.flickr_id)
         self.assertEqual(obj.title, new_title)
 
@@ -125,7 +125,7 @@ class FlickrModelTests(TestCase):
         for size in size_bunch:
             self.assertEqual(unslash(size.source), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).source)
             self.assertEqual(unslash(size.url), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).url)
-        Photo.objects.update_from_json(flickr_id=photo.flickr_id, photo=json_info_photo, info=json_info, sizes=json_sizes, exif=json_exif)
+        Photo.objects.update_from_json(self.flickr_user, flickr_id=photo.flickr_id, photo=json_info_photo, info=json_info, sizes=json_sizes, exif=json_exif)
         photo = Photo.objects.get(flickr_id=photo.flickr_id)
         self.assertEqual(photo.square_source, photo.square.source)
         self.assertEqual(photo.thumb_source, photo.thumb.source)
@@ -147,7 +147,7 @@ class FlickrModelTests(TestCase):
             for size in size_bunch:
                 self.assertEqual(unslash(size.source), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).source)
                 self.assertEqual(unslash(size.url), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).url)
-        Photo.objects.update_from_json(flickr_id=photo.flickr_id, photo=json_info, sizes=json_sizes, exif=json_exif)
+        Photo.objects.update_from_json(self.flickr_user, flickr_id=photo.flickr_id, photo=json_info, sizes=json_sizes, exif=json_exif)
         photo = Photo.objects.get(flickr_id=photo.flickr_id)
         with self.assertNumQueries(1):
             size_bunch = bunchify(json_sizes['sizes']['size'])
