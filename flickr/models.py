@@ -689,7 +689,7 @@ class CollectionManager(models.Manager):
         return data
 
     def create_obj(self, info, parent=None, flickr_user=None, **kwargs):
-        data = self._prepare_data(info, parent, flickr_user)
+        data = self._prepare_data(info, parent=parent, flickr_user=flickr_user)
         sets_data = cols_data = None
         if 'sets' in data.keys():
             sets_data = data.pop('sets')
