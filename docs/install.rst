@@ -13,7 +13,7 @@ The latest stable-ish build::
 
 Development version::
 
-    pip install hg+https://bitbucket.org/zalew/django-flickr
+    pip install git+https://bitbucket.org/zalew/django-flickr
 
 
 
@@ -22,7 +22,7 @@ From source
 
 ::
 
-    hg clone https://bitbucket.org/zalew/django-flickr
+    git clone https://bitbucket.org/zalew/django-flickr
     cd django-flickr
     ./setup.py install
 
