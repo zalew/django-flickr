@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # encoding: utf-8
+from django.db import models
 from django.contrib.auth.models import User
 from django.core.management.base import CommandError
 from flickr.management.commands import FlickrCommand
 from flickr.models import FlickrUser, Photo, JsonCache, PhotoSet, Collection
 from flickr.shortcuts import get_all_photos, get_photosets_json, \
     get_photoset_photos_json, get_user_json, get_collections_tree_json, \
-    get_photo_exif_json, get_photo_sizes_json, get_photo_info_json, get_photo_geo_json
+    get_photo_exif_json, get_photo_sizes_json, get_photo_info_json, get_photo_geo_json, ALL_EXTRAS
 from optparse import make_option
 import datetime
 import time
@@ -44,6 +45,12 @@ It will take a long time as it needs to fetch Flickr data for every photo separa
 
         make_option('--no-photos', action='store_true', dest='no_photos', default=False,
             help='Don\'t sync photos.'),
+
+        make_option('--update-photos', action='store_true', dest='update_photos', default=False,
+            help='Update outdated photos. It will take a long time as it needs to fetch Flickr several times per photo.'),
+
+        make_option('--update-tags', action='store_true', dest='update_tags', default=False,
+            help='Update tags in photos.'),
 
         # Range to sync
 
@@ -88,6 +95,9 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
         if not options.get('test', False):
             self.flickr_user.bump()  # #bump last_sync
 
+        if options.get('update_photos'):
+            self.update_photos(**options)
+
         t2 = time.time()
         self.v('Exec time: ' + str(round(t2 - t1)), 0)
         return 'Sync end'
@@ -107,10 +117,8 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
                 self.v('-- got data for user', 1)
         self.v('COMPLETE: user info sync', 0)
 
-    def user_photos(self, **options):
+    def _get_photo_subset(self, extras=None, **options):
         flickr_user = self.flickr_user
-        self.v('Syncing user photos', 0)
-        self.v('- getting user photos list...', 1)
         page = options.get('page')
         per_page = options.get('per_page')
         min_upload_date = None
@@ -123,8 +131,19 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
             self.v('  contacting Flickr...', 1)
             if not options.get('ils'):
                 min_upload_date = flickr_user.last_sync
+        #extras = extras or ALL_EXTRAS
+        # \todo Overriden util PhotoManager._prepare_data look up for extras.
+        extras = ALL_EXTRAS
         photos = get_all_photos(nsid=flickr_user.nsid, token=flickr_user.token,
-                        page=page, per_page=per_page, min_upload_date=min_upload_date)
+                        page=page, per_page=per_page, min_upload_date=min_upload_date, extras=extras)
+        return photos
+
+    def user_photos(self, **options):
+        flickr_user = self.flickr_user
+        self.v('Syncing user photos', 0)
+        self.v('- getting user photos list...', 1)
+
+        photos = self._get_photo_subset(**options)
         length = len(photos)
         if length > 0:
             self.v('- got %d photos, it might take a while...' % length, 1)
@@ -177,6 +196,50 @@ set high value (200-500) for initial sync and big updates so we hit flickr less.
         else:
             self.v('- nothing to sync', 0)
         self.v('COMPLETE: user photos sync', 0)
+
+    def update_photos(self, **options):
+        flickr_user = self.flickr_user
+        self.v('Updating user photos', 0)
+
+        """ Update (no creation) all photos in database to get last_updated date """
+        self.v('- updating user photos list...', 1)
+        opts = {'page':options.get('page'), 'per_page':options.get('per_page'), 'ils':True}
+        photos = self._get_photo_subset(extras='last_update', **opts)
+        self.v('- got %d photos...' % len(photos), 1)
+        for photo in photos:
+            self.v('- processing photo #%s "%s"' % (photo.id, photo.title), 2)
+            if not options.get('test', False):
+                Photo.objects.update_from_json(flickr_user=flickr_user, flickr_id=photo.id, photo=photo)
+
+        """ Update info for outdated photos """
+        self.v('- getting user photos list to update...', 1)
+        photos = Photo.objects.filter(models.Q(last_sync=None) | models.Q(date_updated__gte=models.F('last_sync')))
+        length = len(photos)
+        if length > 0:
+            self.v('- got %d photos, it might take a while...' % len(photos), 1)
+            for photo in photos:
+                try:
+                    self.v('- processing photo #%s "%s"' % (photo.flickr_id, photo.title), 2)
+                    info = get_photo_info_json(photo_id=photo.flickr_id, token=flickr_user.token)
+                    exif = get_photo_exif_json(photo_id=photo.flickr_id, token=flickr_user.token)
+                    geo = get_photo_geo_json(photo_id=photo.flickr_id, token=flickr_user.token)
+                    sizes = None
+                    if not options.get('test', False):
+                        Photo.objects.update_from_json(flickr_user=flickr_user, flickr_id=photo.flickr_id, photo=None, info=info, sizes=sizes, exif=exif, geo=geo, update_tags=options.get('update_tags', False))
+                    else:
+                        self.v(' - it\'s a test, so not writing to db', 2)
+                except Exception as e:
+                    self.v('- ERR failing silently exception "%s"' % (e), 1)
+                    # in case sth got wrong with a data set, let's log all the data to db and not break the ongoing process
+                    try:
+                        JsonCache.objects.create(flickr_id=photo.flickr_id, photo=None, info=info, sizes=sizes, exif=exif, geo=geo, exception=e)
+                    except Exception as e2:
+                        #whoa sth is really messed up
+                        JsonCache.objects.create(flickr_id=photo.flickr_id, exception=e2)
+        else:
+            self.v('- nothing to update', 0)
+        self.v('COMPLETE: user photos updated', 0)
+
 
     def user_photosets(self, **options):
         flickr_user = self.flickr_user

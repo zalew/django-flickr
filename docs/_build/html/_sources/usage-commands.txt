@@ -2,7 +2,7 @@
 
 Management Commands
 ===================
-  
+
 
 Sync photos database
 ---------------------
@@ -35,6 +35,9 @@ Sync photos database
   -c, --collections     Sync collections. Photos and sets must be synced
                         first.
   --no-photos           Don't sync photos.
+  --update-photos       Update outdated photos. It will take a long time as
+                        it needs to call Flickr api several times per photo.
+  --update-photos       Update tags in photos.
   -d DAYS, --days=DAYS  Sync photos from the last n days.
   --page=PAGE           Grab a specific portion of photos. To be used with
                         --per_page.
