@@ -3,8 +3,11 @@
 from bunch import bunchify
 from datetime import datetime
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
+from django.template.base import TemplateDoesNotExist
 from django.test import TestCase
 from django.test.client import Client
+from django.test.utils import override_settings
 from flickr.flickr_spec import FLICKR_PHOTO_SIZES
 from flickr.models import FlickrUser, Photo, PhotoSet, Collection
 from flickr.tests_data import json_user, json_sizes, json_exif, json_geo, json_info, \
@@ -154,3 +157,41 @@ class FlickrModelTests(TestCase):
             for size in size_bunch:
                 self.assertEqual(unslash(size.source), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).source)
                 self.assertEqual(unslash(size.url), getattr(photo, FLICKR_PHOTO_SIZES[size.label]['label']).url)
+
+    @override_settings(ROOT_URLCONF='flickr.urls')
+    def test_views_index(self):
+        response = self.client.get(reverse('flickr_index'))
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue("flickr/index.html" in [tmpl.name for tmpl in response.templates])
+
+    @override_settings(ROOT_URLCONF='flickr.urls')
+    def test_views_photo_invalid(self):
+        with self.assertRaises(TemplateDoesNotExist) as exc_info:
+            self.client.get(reverse('flickr_photo', kwargs={'flickr_id': 99999}))
+        self.assertEquals(str(exc_info.exception), "404.html")
+        with self.assertRaises(ValueError) as exc_info:
+            self.client.get(reverse('flickr_photo', kwargs={'flickr_id': "random"}))
+
+    @override_settings(ROOT_URLCONF='flickr.urls')
+    def test_views_photo(self):
+        json_info = json_photos_extras['photos']['photo'][0]
+        FlickrUser.objects.update_from_json(self.flickr_user.id, json_user)
+        flickr_user = FlickrUser.objects.get(flickr_id=json_user['person']['id'])
+        photo = Photo.objects.create_from_json(flickr_user=flickr_user, photo=json_info, sizes=None, exif=json_exif)
+
+        response = self.client.get(reverse('flickr_photo', kwargs={'flickr_id': photo.flickr_id}))
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue("flickr/photo_page.html" in [tmpl.name for tmpl in response.templates])
+        self.assertTrue(photo.title in response.content)
+
+    @override_settings(ROOT_URLCONF='flickr.urls')
+    def test_views_photoset(self):
+        json_info = json_photos_extras['photos']['photo'][0]
+        photo = Photo.objects.create_from_json(flickr_user=self.flickr_user, photo=json_info, sizes=json_sizes, exif=json_exif)
+        photoset = PhotoSet.objects.create_from_json(flickr_user=self.flickr_user, info=json_set_info['photoset'], photos=json_set_photos)
+
+        response = self.client.get(reverse('flickr_photoset', kwargs={'flickr_id': photoset.flickr_id}))
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue("flickr/index.html" in [tmpl.name for tmpl in response.templates])
+        self.assertTrue(photoset.title in response.content)
+        self.assertTrue(photo.description in response.content)
