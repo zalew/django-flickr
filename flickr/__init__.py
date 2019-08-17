@@ -1,2 +1,2 @@
-VERSION = (0, 3, 5)
-DEV_STATUS = '3 - Alpha'
+VERSION = (0, 3, 6)
+DEV_STATUS = '4 - Beta'
