@@ -38,6 +38,7 @@ class FlickrModelTests(TestCase):
         self.assertEqual(fu.iconfarm, json_user['person']['iconfarm'])
         self.assertEqual(fu.path_alias, json_user['person']['path_alias'])
         self.assertEqual(fu.profileurl, json_user['person']['profileurl']['_content'].replace('\\/', '/'))
+        self.assertEqual(fu.tzoffset, json_user['person']['timezone']['offset'])
 
     def test_photo_create(self):
         json_info = json_photos_extras['photos']['photo'][0]
