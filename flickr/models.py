@@ -144,7 +144,7 @@ class PhotoManager(models.Manager):
                         'title': info_bunch.title._content,
                         'description': info_bunch.description._content,
                         'date_posted': ts_to_dt(info_bunch.dates.posted, flickr_user.tzoffset),
-                        'date_taken': '%s%s' % (info_bunch.dates.taken, flickr_user.tzoffset),
+                        'date_taken': '%s%s' % (info_bunch.dates.taken, flickr_user.tzoffset or ""),
                         'date_taken_granularity': info_bunch.dates.takengranularity,
                         'date_updated': ts_to_dt(info_bunch.dates.lastupdate, flickr_user.tzoffset),
                         'tags': info_bunch.tags.tag,
@@ -177,7 +177,7 @@ class PhotoManager(models.Manager):
                         'license': photo_bunch.license,
                         }
             if photo_info['date_taken']:
-                photo_info['date_taken'] = '%s%s' % (photo_info['date_taken'], flickr_user.tzoffset)
+                photo_info['date_taken'] = '%s%s' % (photo_info['date_taken'], flickr_user.tzoffset or "")
 
         photo_data.update(photo_info)
 
@@ -692,7 +692,7 @@ class CollectionManager(models.Manager):
         return data
 
     def create_obj(self, info, parent=None, flickr_user=None, **kwargs):
-        data = self._prepare_data(info, parent, flickr_user)
+        data = self._prepare_data(info, parent=parent, flickr_user=flickr_user)
         sets_data = cols_data = None
         if 'sets' in data.keys():
             sets_data = data.pop('sets')
